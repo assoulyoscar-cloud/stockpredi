@@ -1,387 +1,245 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
-export default function StockPrediLanding() {
+export default function Landing() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitted(true);
+    setEmail('');
     setTimeout(() => setSubmitted(false), 3000);
   };
 
   return (
-    <div style={{ fontFamily: 'Courier New, monospace', color: '#000000', backgroundColor: '#FFFFFF' }}>
+    <div style={{ fontFamily: 'Courier New, monospace', color: '#000000', backgroundColor: '#FFFFFF', lineHeight: '1.6' }}>
       
       {/* NAVBAR */}
-      <nav style={{
-        borderBottom: '1px solid #000000',
-        padding: '12px 32px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        backgroundColor: '#FFFFFF'
-      }}>
-        <div style={{ fontSize: '18px', fontWeight: 'bold' }}>STOCKPREDI</div>
-        <div style={{ display: 'flex', gap: '24px', fontSize: '14px' }}>
-          <a href="#pricing" style={{ textDecoration: 'underline', color: '#000000', cursor: 'pointer' }}>Tarif</a>
-          <a href="#faq" style={{ textDecoration: 'underline', color: '#000000', cursor: 'pointer' }}>FAQ</a>
-          <a href="#contact" style={{ textDecoration: 'underline', color: '#000000', cursor: 'pointer' }}>Contact</a>
+      <nav style={{ borderBottom: '1px solid #000000', padding: '16px 32px', position: 'sticky', top: 0, backgroundColor: '#FFFFFF' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Link to="/" style={{ fontSize: '18px', fontWeight: '700', textDecoration: 'none', color: '#000000' }}>STOCKPREDI</Link>
+          <a href="#contact" style={{ textDecoration: 'underline', color: '#000000', cursor: 'pointer', fontSize: '14px' }}>Essai gratuit</a>
         </div>
       </nav>
 
-      {/* CONTAINER */}
-      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px' }}>
-
-        {/* ========== HERO ========== */}
-        <section style={{ paddingTop: '64px', paddingBottom: '64px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '700', lineHeight: '1.2', marginBottom: '16px' }}>
+      {/* HERO */}
+      <section style={{ padding: '64px 32px', borderBottom: '1px solid #000000', backgroundColor: '#FFFFFF' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <h1 style={{ fontSize: '36px', fontWeight: '700', marginBottom: '16px', lineHeight: '1.2' }}>
             Prévisions de stock qui fonctionnent. Vraiment.
           </h1>
-          <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#333333', marginBottom: '32px' }}>
-            En 5 minutes, réduisez les ruptures de 80% et économisez plus de €5 000/an. Sans complexité. Sans consultant. Juste l'IA qui comprend votre stock.
+          <p style={{ fontSize: '16px', marginBottom: '32px', color: '#333333' }}>
+            Arrêtez de perdre du temps et de l'argent. StockPredi prédit votre stock avec l'IA en moins de 5 minutes.
           </p>
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <button style={{
-              background: '#000000',
-              color: '#FFFFFF',
-              border: '2px solid #000000',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 200ms ease'
-            }}
-            onMouseEnter={(e) => { e.target.style.background = '#FFFFFF'; e.target.style.color = '#000000'; }}
-            onMouseLeave={(e) => { e.target.style.background = '#000000'; e.target.style.color = '#FFFFFF'; }}
-            >
-              ESSAI GRATUIT 14 JOURS
+          <button onClick={() => document.getElementById('contact').scrollIntoView()} style={{
+            background: '#000000', color: '#FFFFFF', border: 'none', padding: '12px 24px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', fontFamily: 'Courier New'
+          }}>
+            DÉMARRER (14 jours gratuit)
+          </button>
+          <p style={{ fontSize: '12px', color: '#666666', marginTop: '12px' }}>Aucune carte bancaire requise</p>
+        </div>
+      </section>
+
+      {/* PROBLEM */}
+      <section style={{ padding: '64px 32px', borderBottom: '1px solid #000000' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '32px' }}>Votre problème</h2>
+          
+          <div style={{ marginBottom: '24px', padding: '16px', border: '1px solid #000000' }}>
+            <p style={{ fontWeight: '700', marginBottom: '8px' }}>30-50% d'erreur dans vos prévisions</p>
+            <p style={{ fontSize: '14px', color: '#333333' }}>Excel, tableurs manuels, aucune automatisation = mauvaises décisions.</p>
+          </div>
+
+          <div style={{ marginBottom: '24px', padding: '16px', border: '1px solid #000000' }}>
+            <p style={{ fontWeight: '700', marginBottom: '8px' }}>Stockouts et overstock coûteux</p>
+            <p style={{ fontSize: '14px', color: '#333333' }}>Vous perdez €10K-60K/an en ruptures ou surplus de stock.</p>
+          </div>
+
+          <div style={{ padding: '16px', border: '1px solid #000000' }}>
+            <p style={{ fontWeight: '700', marginBottom: '8px' }}>Outils complexes et chers</p>
+            <p style={{ fontSize: '14px', color: '#333333' }}>Les solutions "enterprise" coûtent €1000+/mois et demandent 3 mois de setup.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* SOLUTION */}
+      <section style={{ padding: '64px 32px', borderBottom: '1px solid #000000' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '32px' }}>Comment ça marche</h2>
+          
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'flex-start' }}>
+            <div style={{ fontSize: '18px', fontWeight: '700', minWidth: '32px' }}>1</div>
+            <div>
+              <p style={{ fontWeight: '700', marginBottom: '8px' }}>Uploadez votre CSV</p>
+              <p style={{ fontSize: '14px', color: '#333333' }}>Shopify, WooCommerce, Excel, n'importe quel format. Aucun template.</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'flex-start' }}>
+            <div style={{ fontSize: '18px', fontWeight: '700', minWidth: '32px' }}>2</div>
+            <div>
+              <p style={{ fontWeight: '700', marginBottom: '8px' }}>L'IA analyse automatiquement</p>
+              <p style={{ fontSize: '14px', color: '#333333' }}>Détecte vos colonnes (Date, Produit, Quantité) sans config manuelle.</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+            <div style={{ fontSize: '18px', fontWeight: '700', minWidth: '32px' }}>3</div>
+            <div>
+              <p style={{ fontWeight: '700', marginBottom: '8px' }}>Obtenez vos recommandations</p>
+              <p style={{ fontSize: '14px', color: '#333333' }}>"Commandez 140 units semaine 4 pour 95% de confiance"</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section style={{ padding: '64px 32px', borderBottom: '1px solid #000000' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '32px' }}>Fonctionnalités</h2>
+          
+          <div style={{ display: 'grid', gap: '16px' }}>
+            <div style={{ padding: '16px', border: '1px solid #000000' }}>
+              <p style={{ fontWeight: '700' }}>✓ Prévisions illimitées</p>
+              <p style={{ fontSize: '14px', color: '#333333' }}>3, 6, 12 mois. Produits illimités.</p>
+            </div>
+
+            <div style={{ padding: '16px', border: '1px solid #000000' }}>
+              <p style={{ fontWeight: '700' }}>✓ Intégrations Shopify + WooCommerce</p>
+              <p style={{ fontSize: '14px', color: '#333333' }}>Connectez directement ou uploadez CSV.</p>
+            </div>
+
+            <div style={{ padding: '16px', border: '1px solid #000000' }}>
+              <p style={{ fontWeight: '700' }}>✓ Support français &lt;4h</p>
+              <p style={{ fontSize: '14px', color: '#333333' }}>Email, ChatBot, équipe réactive.</p>
+            </div>
+
+            <div style={{ padding: '16px', border: '1px solid #000000' }}>
+              <p style={{ fontWeight: '700' }}>✓ RGPD 100% conforme</p>
+              <p style={{ fontSize: '14px', color: '#333333' }}>Données EU. Aucun partage tiers.</p>
+            </div>
+
+            <div style={{ padding: '16px', border: '1px solid #000000' }}>
+              <p style={{ fontWeight: '700' }}>✓ Alertes en temps réel</p>
+              <p style={{ fontSize: '14px', color: '#333333' }}>Notifiés si stock critique.</p>
+            </div>
+
+            <div style={{ padding: '16px', border: '1px solid #000000' }}>
+              <p style={{ fontWeight: '700' }}>✓ API (futur)</p>
+              <p style={{ fontSize: '14px', color: '#333333' }}>Connectez votre système ERP.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section style={{ padding: '64px 32px', borderBottom: '1px solid #000000' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '32px' }}>Tarification simple</h2>
+          
+          <div style={{ padding: '32px', border: '2px solid #000000' }}>
+            <p style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>€35/mois</p>
+            <p style={{ fontSize: '14px', color: '#333333', marginBottom: '24px' }}>Tout inclus. Zéro surprise.</p>
+            
+            <ul style={{ marginBottom: '24px', paddingLeft: '0' }}>
+              <li style={{ marginBottom: '8px', fontSize: '14px' }}>✓ Produits illimités</li>
+              <li style={{ marginBottom: '8px', fontSize: '14px' }}>✓ Prévisions illimitées (3/6/12 mois)</li>
+              <li style={{ marginBottom: '8px', fontSize: '14px' }}>✓ Shopify + WooCommerce</li>
+              <li style={{ marginBottom: '8px', fontSize: '14px' }}>✓ Support français</li>
+              <li style={{ marginBottom: '8px', fontSize: '14px' }}>✓ RGPD conforme</li>
+              <li style={{ fontSize: '14px' }}>✓ 14 jours gratuit (no card)</li>
+            </ul>
+
+            <button onClick={() => document.getElementById('contact').scrollIntoView()} style={{
+              background: '#000000', color: '#FFFFFF', border: 'none', padding: '12px 24px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%', fontFamily: 'Courier New'
+            }}>
+              ESSAYER GRATUITEMENT
             </button>
-            <button style={{
-              background: '#FFFFFF',
-              color: '#000000',
-              border: '2px solid #000000',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 200ms ease'
-            }}
-            onMouseEnter={(e) => { e.target.style.opacity = '0.7'; }}
-            onMouseLeave={(e) => { e.target.style.opacity = '1'; }}
-            >
-              VOIR UNE DÉMO
-            </button>
-          </div>
-          <div style={{ marginTop: '48px', padding: '24px', border: '1px solid #000000', backgroundColor: '#FFFFFF' }}>
-            <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#333333', margin: 0 }}>
-              [Illustration du dashboard StockPredi — Prévisions claires + Recommandations]
-            </p>
-          </div>
-        </section>
 
-        {/* DIVIDER */}
-        <div style={{ height: '1px', background: '#000000', margin: '32px 0' }} />
+            <p style={{ fontSize: '12px', color: '#666666', marginTop: '12px', textAlign: 'center' }}>Annulation à tout moment</p>
+          </div>
+        </div>
+      </section>
 
-        {/* ========== PROBLÈME ========== */}
-        <section style={{ paddingTop: '48px', paddingBottom: '48px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', lineHeight: '1.3', marginBottom: '24px' }}>
-            Vous perdez temps et argent chaque mois
-          </h2>
+      {/* FAQ */}
+      <section style={{ padding: '64px 32px', borderBottom: '1px solid #000000' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '32px' }}>Questions fréquentes</h2>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>30–50% d'erreur de prévision</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                Stockouts : clients qui partent. Surstock : €5K+ bloqués en stock.
-              </p>
-            </div>
-            
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>Gestion manuelle ou outils complexes</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                Les PME françaises gèrent ça à la main. Ou paient €1000+/mois pour des solutions enterprise.
-              </p>
-            </div>
-            
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>Vous n'êtes pas seul</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                500+ PME françaises cherchent une solution simple et abordable. On change ça.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* DIVIDER */}
-        <div style={{ height: '1px', background: '#000000', margin: '32px 0' }} />
-
-        {/* ========== SOLUTION ========== */}
-        <section style={{ paddingTop: '48px', paddingBottom: '48px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', lineHeight: '1.3', marginBottom: '24px' }}>
-            Setup 5 minutes. Résultats immédiats.
-          </h2>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>1️⃣ Upload vos données</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                Connectez Shopify, WooCommerce, ou un fichier Excel. Notre IA détecte vos colonnes automatiquement.
-              </p>
-            </div>
-
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>2️⃣ Notre IA prédit</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                Prophet + Llama analysent 6 mois d'historique. Précision : 85% vs 35% à la main.
-              </p>
-            </div>
-
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>3️⃣ Dashboard recommande</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                Voyez : "Commandez 140 unités semaine 4" avec confiance et explications claires.
-              </p>
-            </div>
-
-          </div>
-        </section>
-
-        {/* DIVIDER */}
-        <div style={{ height: '1px', background: '#000000', margin: '32px 0' }} />
-
-        {/* ========== FEATURES ========== */}
-        <section style={{ paddingTop: '48px', paddingBottom: '48px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', lineHeight: '1.3', marginBottom: '24px' }}>
-            Tout ce qu'il faut. Rien de plus.
-          </h2>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ paddingLeft: '24px', borderLeft: '2px solid #000000' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 4px 0' }}>✓ Forecast illimité</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>3 mois, 6 mois, 12 mois. Vous choisissez.</p>
-            </div>
-
-            <div style={{ paddingLeft: '24px', borderLeft: '2px solid #000000' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 4px 0' }}>✓ Shopify + WooCommerce intégrés</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>Export automatique. Zéro API key.</p>
-            </div>
-
-            <div style={{ paddingLeft: '24px', borderLeft: '2px solid #000000' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 4px 0' }}>✓ Support français rapide</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>Email répondu en &lt;4h. Pas de chat bot.</p>
-            </div>
-
-            <div style={{ paddingLeft: '24px', borderLeft: '2px solid #000000' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 4px 0' }}>✓ Vos données restent vôtres</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>Option self-host Llama = zéro cloud. Conforme RGPD jour 1.</p>
-            </div>
-
-            <div style={{ paddingLeft: '24px', borderLeft: '2px solid #000000' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 4px 0' }}>✓ Alertes intelligentes</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>"Rupture risquée en semaine 3" → Email automatique.</p>
-            </div>
-
-            <div style={{ paddingLeft: '24px', borderLeft: '2px solid #000000' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 4px 0' }}>✓ Export + API (futur)</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>Intégrez dans votre workflow.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* DIVIDER */}
-        <div style={{ height: '1px', background: '#000000', margin: '32px 0' }} />
-
-        {/* ========== PRICING ========== */}
-        <section id="pricing" style={{ paddingTop: '48px', paddingBottom: '48px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', lineHeight: '1.3', marginBottom: '24px' }}>
-            €35/mois. C'est tout.
-          </h2>
-          
-          <div style={{ border: '2px solid #000000', padding: '32px', textAlign: 'center' }}>
-            <p style={{ fontSize: '14px', fontWeight: '700', margin: '0 0 24px 0', color: '#333333' }}>STOCKPREDI</p>
-            <p style={{ fontSize: '32px', fontWeight: '700', margin: '0 0 8px 0' }}>€35/mois</p>
-            <p style={{ fontSize: '14px', color: '#333333', margin: '0 0 24px 0' }}>(ou €350/an, −2%)</p>
-            
-            <div style={{ textAlign: 'left', margin: '24px 0', fontSize: '14px', lineHeight: '1.8' }}>
-              <p>✓ Produits illimités</p>
-              <p>✓ Forecast illimité</p>
-              <p>✓ Shopify + WC</p>
-              <p>✓ Alerts + Support FR</p>
-            </div>
-
-            <button style={{
-              background: '#000000',
-              color: '#FFFFFF',
-              border: '2px solid #000000',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              width: '100%',
-              transition: 'all 200ms ease',
-              marginBottom: '12px'
-            }}
-            onMouseEnter={(e) => { e.target.style.background = '#FFFFFF'; e.target.style.color = '#000000'; }}
-            onMouseLeave={(e) => { e.target.style.background = '#000000'; e.target.style.color = '#FFFFFF'; }}
-            >
-              ESSAI GRATUIT 14 JOURS
-            </button>
-            
-            <p style={{ fontSize: '12px', color: '#333333', margin: 0 }}>Aucune carte requise</p>
+          <div style={{ marginBottom: '24px', padding: '16px', border: '1px solid #000000' }}>
+            <p style={{ fontWeight: '700', marginBottom: '8px' }}>Aucun engagement ?</p>
+            <p style={{ fontSize: '14px', color: '#333333' }}>14 jours gratuit, aucune carte bancaire, annulation 1 clic.</p>
           </div>
 
-          <p style={{ fontSize: '14px', color: '#333333', marginTop: '24px', textAlign: 'center' }}>
-            Pas de "Starter/Pro/Business". Un prix. Zéro surprise.
-          </p>
-        </section>
+          <div style={{ marginBottom: '24px', padding: '16px', border: '1px solid #000000' }}>
+            <p style={{ fontWeight: '700', marginBottom: '8px' }}>Où sont mes données ?</p>
+            <p style={{ fontSize: '14px', color: '#333333' }}>Union européenne (RGPD). Aucun partage tiers.</p>
+          </div>
 
-        {/* DIVIDER */}
-        <div style={{ height: '1px', background: '#000000', margin: '32px 0' }} />
+          <div style={{ marginBottom: '24px', padding: '16px', border: '1px solid #000000' }}>
+            <p style={{ fontWeight: '700', marginBottom: '8px' }}>Combien de produits ?</p>
+            <p style={{ fontSize: '14px', color: '#333333' }}>Illimité. 1 produit ou 10K, c'est la même prix.</p>
+          </div>
 
-        {/* ========== CTA FINAL ========== */}
-        <section style={{ paddingTop: '48px', paddingBottom: '48px', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', lineHeight: '1.3', marginBottom: '24px' }}>
-            Prêt à réduire vos stockouts ?
-          </h2>
-          <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#333333', marginBottom: '24px' }}>
-            Les PME françaises font confiance à StockPredi pour automatiser leur prévision de stock. Rejoignez-les. 14 jours gratuit. Aucun engagement.
-          </p>
+          <div style={{ padding: '16px', border: '1px solid #000000' }}>
+            <p style={{ fontWeight: '700', marginBottom: '8px' }}>Support ?</p>
+            <p style={{ fontSize: '14px', color: '#333333' }}>Email français répondu &lt;4h.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA FINAL */}
+      <section id="contact" style={{ padding: '64px 32px', borderBottom: '1px solid #000000', backgroundColor: '#000000', color: '#FFFFFF' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '32px' }}>Prêt ?</h2>
           
-          <form onSubmit={handleSubmit} style={{ maxWidth: '400px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-              <label style={{ fontSize: '14px', fontWeight: '700' }}>Email *</label>
-              <input 
-                type="email" 
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="vous@entreprise.fr"
-                style={{
-                  border: '1px solid #000000',
-                  padding: '10px 12px',
-                  fontSize: '14px',
-                  fontFamily: 'Courier New, monospace',
-                  height: '40px',
-                  backgroundColor: '#FFFFFF'
-                }}
-              />
-            </div>
+          <form onSubmit={handleSubmit} style={{ marginBottom: '24px' }}>
+            <input
+              type="email"
+              placeholder="votre@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #FFFFFF',
+                backgroundColor: '#000000',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                fontFamily: 'Courier New',
+                marginBottom: '12px',
+                boxSizing: 'border-box'
+              }}
+            />
             <button type="submit" style={{
-              background: '#000000',
-              color: '#FFFFFF',
-              border: '2px solid #000000',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              width: '100%',
-              transition: 'all 200ms ease'
-            }}
-            onMouseEnter={(e) => { e.target.style.background = '#FFFFFF'; e.target.style.color = '#000000'; }}
-            onMouseLeave={(e) => { e.target.style.background = '#000000'; e.target.style.color = '#FFFFFF'; }}
-            >
-              ESSAI GRATUIT 14 JOURS
+              background: '#FFFFFF', color: '#000000', border: 'none', padding: '12px 24px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%', fontFamily: 'Courier New'
+            }}>
+              DÉMARRER L'ESSAI GRATUIT
             </button>
-            {submitted && <p style={{ fontSize: '14px', color: '#333333', marginTop: '12px' }}>✓ Email reçu</p>}
           </form>
-        </section>
 
-        {/* DIVIDER */}
-        <div style={{ height: '1px', background: '#000000', margin: '32px 0' }} />
+          {submitted && (
+            <p style={{ fontSize: '14px', color: '#CCCCCC', textAlign: 'center' }}>✓ Email reçu ! Vérifiez votre inbox.</p>
+          )}
 
-        {/* ========== FAQ ========== */}
-        <section id="faq" style={{ paddingTop: '48px', paddingBottom: '48px' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', lineHeight: '1.3', marginBottom: '24px' }}>
-            Questions fréquentes
-          </h2>
+          <p style={{ fontSize: '12px', color: '#999999', textAlign: 'center' }}>14 jours gratuit. Aucune carte bancaire. Annulation facile.</p>
+        </div>
+      </section>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Quelles données vous avez besoin ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                Historique ventes (6 mois min). Date + Produit + Quantité. On détecte vos colonnes automatiquement.
-              </p>
-            </div>
-
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Fonctionne avec Shopify/WooCommerce ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                Oui. Export en 2 clics. Intégration API futur.
-              </p>
-            </div>
-
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Et si j'ai plusieurs sites/entrepôts ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                €35/mois couvre tout. Illimité produits ET sites.
-              </p>
-            </div>
-
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Mes données sont confidentielles ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                RGPD conforme. Data en EU (Supabase). Option self-host Llama = zéro cloud.
-              </p>
-            </div>
-
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Support français ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                Email + chat FR. Réponse &lt;4h garanti.
-              </p>
-            </div>
-
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Combien de temps pour le setup ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                5 minutes. Upload CSV → Dashboard → Recommandations.
-              </p>
-            </div>
-
-            <div style={{ border: '1px solid #000000', padding: '24px' }}>
-              <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Vous gardez mes données après résiliation ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: 0 }}>
-                Non. Suppression complète sur demande.
-              </p>
-            </div>
-
+      {/* FOOTER */}
+      <footer style={{ padding: '32px', borderTop: '1px solid #000000', backgroundColor: '#FFFFFF' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ fontSize: '12px', marginBottom: '16px' }}>© 2026 StockPredi. Tous droits réservés.</p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap', fontSize: '12px' }}>
+            <Link to="/mentions-legales" style={{ color: '#000000', textDecoration: 'underline' }}>Mentions légales</Link>
+            <Link to="/politique-confidentialite" style={{ color: '#000000', textDecoration: 'underline' }}>Confidentialité</Link>
+            <Link to="/conditions-utilisation" style={{ color: '#000000', textDecoration: 'underline' }}>CGU</Link>
+            <Link to="/contact" style={{ color: '#000000', textDecoration: 'underline' }}>Contact</Link>
           </div>
-        </section>
-
-        {/* DIVIDER */}
-        <div style={{ height: '1px', background: '#000000', margin: '32px 0' }} />
-
-        {/* ========== FOOTER ========== */}
-        <footer id="contact" style={{ paddingTop: '48px', paddingBottom: '48px', textAlign: 'center', fontSize: '12px', color: '#333333' }}>
-          <p style={{ fontWeight: '700', marginBottom: '16px' }}>StockPredi</p>
-          <p style={{ margin: '8px 0' }}>© 2026 — Tous droits réservés</p>
-          
-          <div style={{ margin: '24px 0', display: 'flex', justifyContent: 'center', gap: '16px' }}>
-            <a href="#" style={{ textDecoration: 'underline', color: '#000000' }}>Mentions légales</a>
-            <span>•</span>
-            <a href="#" style={{ textDecoration: 'underline', color: '#000000' }}>Confidentialité</a>
-            <span>•</span>
-            <a href="#" style={{ textDecoration: 'underline', color: '#000000' }}>CGU</a>
-            <span>•</span>
-            <a href="#" style={{ textDecoration: 'underline', color: '#000000' }}>Contact</a>
-          </div>
-
-          <p style={{ margin: '16px 0', fontWeight: '700' }}>contact@stockpredi.fr</p>
-          
-          <div style={{ margin: '24px 0', display: 'flex', justifyContent: 'center', gap: '16px' }}>
-            <a href="#" style={{ textDecoration: 'underline', color: '#000000' }}>LinkedIn</a>
-            <span>•</span>
-            <a href="#" style={{ textDecoration: 'underline', color: '#000000' }}>Twitter</a>
-          </div>
-        </footer>
-
-      </div>
+        </div>
+      </footer>
     </div>
   );
 }
