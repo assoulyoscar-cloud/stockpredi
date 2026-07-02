@@ -124,6 +124,19 @@ export default function ConditionsUtilisation() {
             Dernière mise à jour : juin 2026
           </p>
 
+          <div style={{ borderTop: '1px solid #000000', marginTop: '48px', paddingTop: '24px' }}>
+            <p style={{ fontSize: '14px', color: '#333333', marginBottom: '8px' }}>Pages légales</p>
+            <p style={{ fontSize: '14px' }}>
+              <Link to="/" style={{ textDecoration: 'underline', color: '#000000' }}>← Accueil</Link>
+              {' · '}
+              <Link to="/mentions-legales" style={{ textDecoration: 'underline', color: '#000000' }}>Mentions légales</Link>
+              {' · '}
+              <Link to="/politique-confidentialite" style={{ textDecoration: 'underline', color: '#000000' }}>Politique de confidentialité</Link>
+              {' · '}
+              <Link to="/contact" style={{ textDecoration: 'underline', color: '#000000' }}>Contact</Link>
+            </p>
+          </div>
+
         </div>
 
       </div>

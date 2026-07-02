@@ -90,9 +90,36 @@ export default function MentionsLegales() {
             Ces mentions légales sont régies par le droit français. En cas de litige, compétence aux tribunaux français.
           </p>
 
-          <p style={{ marginTop: '48px', fontSize: '14px', color: '#333333' }}>
-            Dernière mise à jour : juin 2026
+          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+            Conformité EU AI Act 2024
+          </h2>
+          <p>
+            StockPredi utilise des algorithmes de prévision automatique (IA) pour générer des recommandations de stock.<br />
+            <br />
+            <strong>Classification :</strong> Système à risque minimal (Article 5 EU AI Act 2024) — outil d'aide à la décision business, sans impact sur droits fondamentaux.<br />
+            <strong>Usage :</strong> Informatif uniquement. Les prévisions ne constituent pas un conseil professionnel. L'utilisateur reste seul responsable de ses décisions d'achat.<br />
+            <strong>Données :</strong> Uniquement des données de stock/ventes fournies par l'utilisateur. Aucune donnée biométrique, santé ou mineurs.<br />
+            <strong>Transparence :</strong> L'IA est identifiée comme telle dans l'interface. Aucune décision entièrement automatisée sans possibilité de contrôle humain.<br />
+            <br />
+            StockPredi certifie sa conformité à l'EU AI Act du 13 juin 2024 pour les systèmes à risque minimal.
           </p>
+
+          <p style={{ marginTop: '48px', fontSize: '14px', color: '#333333' }}>
+            Dernière mise à jour : juillet 2026
+          </p>
+
+          <div style={{ borderTop: '1px solid #000000', marginTop: '48px', paddingTop: '24px' }}>
+            <p style={{ fontSize: '14px', color: '#333333', marginBottom: '8px' }}>Pages légales</p>
+            <p style={{ fontSize: '14px' }}>
+              <Link to="/" style={{ textDecoration: 'underline', color: '#000000' }}>← Accueil</Link>
+              {' · '}
+              <Link to="/politique-confidentialite" style={{ textDecoration: 'underline', color: '#000000' }}>Politique de confidentialité</Link>
+              {' · '}
+              <Link to="/conditions-utilisation" style={{ textDecoration: 'underline', color: '#000000' }}>CGU</Link>
+              {' · '}
+              <Link to="/contact" style={{ textDecoration: 'underline', color: '#000000' }}>Contact</Link>
+            </p>
+          </div>
 
         </div>
 
