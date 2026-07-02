@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function PolitiqueConfidentialite() {
   return (
@@ -13,8 +14,11 @@ export default function PolitiqueConfidentialite() {
         alignItems: 'center',
         backgroundColor: '#FFFFFF'
       }}>
-        <a href="/" style={{ fontSize: '18px', fontWeight: 'bold', textDecoration: 'none', color: '#000000' }}>STOCKPREDI</a>
-        <a href="/" style={{ textDecoration: 'underline', color: '#000000', cursor: 'pointer', fontSize: '14px' }}>← Retour</a>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+          <img src="/logoSTOCKPREDI.png" alt="StockPredi" style={{ height: '32px', width: 'auto' }} />
+          <span style={{ fontSize: '18px', fontWeight: '700', color: '#000000' }}>STOCKPREDI</span>
+        </Link>
+        <Link to="/" style={{ textDecoration: 'underline', color: '#000000', cursor: 'pointer', fontSize: '14px' }}>← Retour</Link>
       </nav>
 
       {/* CONTAINER */}

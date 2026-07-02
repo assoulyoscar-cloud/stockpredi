@@ -1,11 +1,19 @@
 {
-  "buildCommand": "npm run build",
-  "devCommand": "npm start",
-  "outputDirectory": "build",
-  "rewrites": [
+  "headers": [
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.supabase.co; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://*.supabase.co https://stripe.com"
+        },
+        {"key": "X-Frame-Options", "value": "DENY"},
+        {"key": "X-Content-Type-Options", "value": "nosniff"},
+        {"key": "X-XSS-Protection", "value": "1; mode=block"},
+        {"key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains"},
+        {"key": "Referrer-Policy", "value": "strict-origin-when-cross-origin"}
+      ]
     }
-  ]
+  ],
+  "rewrites": [{"source": "/(.*)", "destination": "/index.html"}]
 }

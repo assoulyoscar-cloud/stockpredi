@@ -1,13 +1,14 @@
 {
   "name": "stockpredi",
   "version": "1.0.0",
-  "description": "Prévisions de stock IA pour PME françaises",
+  "description": "Pr\u00e9visions de stock IA pour PME fran\u00e7aises",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "@supabase/supabase-js": "^2.39.0"
   },
   "scripts": {
     "start": "react-scripts start",

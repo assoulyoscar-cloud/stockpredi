@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { captureEmail } from '../api/supabaseClient';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -17,13 +19,19 @@ export default function Contact() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 3000);
+    // TODO AOÛT : Valider + sanitizer côté serveur (actuellement frontend only)
+    const result = await captureEmail(formData.email, 'contact');
+    if (result.success || true) {
+      // On affiche succès même si capture échoue (UX) — log l'erreur
+      if (!result.success) console.error('Email capture failed:', result.error);
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      }, 3000);
+    }
   };
 
   return (
@@ -38,8 +46,11 @@ export default function Contact() {
         alignItems: 'center',
         backgroundColor: '#FFFFFF'
       }}>
-        <a href="/" style={{ fontSize: '18px', fontWeight: 'bold', textDecoration: 'none', color: '#000000' }}>STOCKPREDI</a>
-        <a href="/" style={{ textDecoration: 'underline', color: '#000000', cursor: 'pointer', fontSize: '14px' }}>← Retour</a>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+          <img src="/logoSTOCKPREDI.png" alt="StockPredi" style={{ height: '32px', width: 'auto' }} />
+          <span style={{ fontSize: '18px', fontWeight: '700', color: '#000000' }}>STOCKPREDI</span>
+        </Link>
+        <Link to="/" style={{ textDecoration: 'underline', color: '#000000', cursor: 'pointer', fontSize: '14px' }}>← Retour</Link>
       </nav>
 
       {/* CONTAINER */}
@@ -243,10 +254,10 @@ export default function Contact() {
           </h2>
 
           <p>
-            <a href="/" style={{ textDecoration: 'underline', color: '#000000' }}>← Retour à l'accueil</a><br />
-            <a href="/mentions-legales" style={{ textDecoration: 'underline', color: '#000000' }}>Mentions légales</a><br />
-            <a href="/politique-confidentialite" style={{ textDecoration: 'underline', color: '#000000' }}>Politique de confidentialité</a><br />
-            <a href="/conditions-utilisation" style={{ textDecoration: 'underline', color: '#000000' }}>Conditions d'utilisation</a>
+            <Link to="/" style={{ textDecoration: 'underline', color: '#000000' }}>← Retour à l'accueil</Link><br />
+            <Link to="/mentions-legales" style={{ textDecoration: 'underline', color: '#000000' }}>Mentions légales</Link><br />
+            <Link to="/politique-confidentialite" style={{ textDecoration: 'underline', color: '#000000' }}>Politique de confidentialité</Link><br />
+            <Link to="/conditions-utilisation" style={{ textDecoration: 'underline', color: '#000000' }}>Conditions d'utilisation</Link>
           </p>
 
         </div>
