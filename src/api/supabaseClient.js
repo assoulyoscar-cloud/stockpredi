@@ -21,7 +21,7 @@ export async function captureEmail(email, source = 'landing') {
   }
   const { data, error } = await supabase
     .from('emails')
-    .insert([{ email: email.trim().toLowerCase(), source }]);
+    .upsert([{ email: email.trim().toLowerCase(), source }], { onConflict: 'email', ignoreDuplicates: true });
 
   if (error) {
     console.error('Supabase captureEmail error:', error.message);
