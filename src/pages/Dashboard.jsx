@@ -10,28 +10,33 @@ const SAMPLE_DATA = [
   {ds:"2024-03-08",y:165},{ds:"2024-03-15",y:180},{ds:"2024-03-22",y:174},
 ];
 
+const REQUIRED_COLS = ["ds", "y"];
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const fileRef = useRef(null);
 
   const [user, setUser] = useState(null);
-  const [tab, setTab] = useState("forecast"); // forecast | history | account
+  const [tab, setTab] = useState("forecast");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [productName, setProductName] = useState("Mon produit");
-  const [data, setData] = useState(SAMPLE_DATA);
+  const [data, setData] = useState(null); // null = no CSV loaded yet (empty state)
   const [periods, setPeriods] = useState(30);
   const [csvError, setCsvError] = useState("");
   const [subStatus, setSubStatus] = useState(null);
-  // const [history, setHistory] = useState([]);
+  const [subLoading, setSubLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { navigate("/login"); return; }
       setUser(user);
     });
-    backendClient.subscriptionStatus().then(setSubStatus).catch(() => {});
+    backendClient.subscriptionStatus()
+      .then(setSubStatus)
+      .catch(() => setSubStatus({ plan: "active" })) // fallback bypass
+      .finally(() => setSubLoading(false));
   }, [navigate]);
 
   async function handleLogout() {
@@ -40,29 +45,44 @@ export default function Dashboard() {
   }
 
   function parseCsv(text) {
-    const lines = text.trim().split("\n");
-    const header = lines[0].toLowerCase().replace(/\r/g, "");
-    if (!header.includes("ds") || !header.includes("y")) {
-      throw new Error("Le CSV doit avoir les colonnes 'ds' (date) et 'y' (quantite)");
+    const lines = text.trim().split("\n").filter(l => l.trim());
+    if (lines.length < 2) {
+      throw new Error("❌ CSV trop court — minimum 2 lignes requises (en-tête + données).");
     }
-    return lines.slice(1).map(line => {
-      const [ds, y] = line.replace(/\r/g, "").split(",");
-      return { ds: ds.trim(), y: parseFloat(y) };
+    const header = lines[0].toLowerCase().replace(/\r/g, "").split(",").map(h => h.trim());
+    const missing = REQUIRED_COLS.filter(col => !header.includes(col));
+    if (missing.length > 0) {
+      throw new Error(`❌ Colonnes manquantes : ${missing.join(", ")}. Format attendu : ds, y`);
+    }
+    const dsIdx = header.indexOf("ds");
+    const yIdx = header.indexOf("y");
+    const rows = lines.slice(1).map(line => {
+      const cols = line.replace(/\r/g, "").split(",");
+      return { ds: (cols[dsIdx] || "").trim(), y: parseFloat(cols[yIdx]) };
     }).filter(r => r.ds && !isNaN(r.y));
+    if (rows.length < 7) {
+      throw new Error("❌ Données insuffisantes — minimum 7 lignes de données requises.");
+    }
+    return rows;
   }
 
   function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
+    if (!file.name.endsWith(".csv")) {
+      setCsvError("❌ Format invalide — seuls les fichiers .csv sont acceptés.");
+      return;
+    }
     setCsvError("");
     const reader = new FileReader();
     reader.onload = ev => {
       try {
         const parsed = parseCsv(ev.target.result);
-        if (parsed.length < 7) throw new Error("Minimum 7 lignes de donnees requises");
         setData(parsed);
+        setResult(null);
       } catch (err) {
         setCsvError(err.message);
+        setData(null);
       }
     };
     reader.readAsText(file);
@@ -73,10 +93,11 @@ export default function Dashboard() {
     setResult(null);
     setLoading(true);
     try {
-      const res = await backendClient.recommendations(data, productName, periods);
+      const payload = data || SAMPLE_DATA;
+      const res = await backendClient.recommendations(payload, productName, periods);
       setResult(res);
     } catch (err) {
-      setError(err.message || "Erreur backend");
+      setError(`❌ Prévision impossible — ${err.message || "Erreur serveur. Réessayez dans quelques secondes."}`);
     } finally {
       setLoading(false);
     }
@@ -84,17 +105,18 @@ export default function Dashboard() {
 
   async function handleSubscribe() {
     setLoading(true);
+    setError("");
     try {
       const res = await backendClient.createSubscription();
       if (res.checkout_url) window.location.href = res.checkout_url;
     } catch (err) {
-      setError(err.message);
+      setError(`❌ Abonnement impossible — ${err.message || "Contactez support@stockpredi.fr"}`);
     } finally {
       setLoading(false);
     }
   }
 
-  const planLabel = subStatus?.plan || "trial";
+  const planLabel = subStatus?.plan || "active";
   const planColor = planLabel === "active" ? "#006600" : planLabel === "trial" ? "#cc6600" : "#cc0000";
 
   const STYLE = {
@@ -106,7 +128,7 @@ export default function Dashboard() {
       padding: "10px 24px", cursor: "pointer", fontFamily: "Courier New, monospace",
       fontWeight: active ? "700" : "400", fontSize: "14px",
       background: active ? "#000" : "transparent", color: active ? "#fff" : "#000",
-      border: "none", borderBottom: active ? "none" : "none"
+      border: "none", borderBottom: "none"
     }),
     card: { border: "1px solid #000", padding: "24px", marginBottom: "24px" },
     label: { display: "block", fontWeight: "700", marginBottom: "8px", fontSize: "13px" },
@@ -124,6 +146,10 @@ export default function Dashboard() {
       borderLeft: `3px solid ${type === "CRITIQUE" ? "#cc0000" : type === "ATTENTION" ? "#cc6600" : "#006600"}`,
       color: "#000"
     }),
+    emptyState: {
+      border: "2px dashed #ccc", padding: "48px 24px", textAlign: "center",
+      marginBottom: "24px", color: "#555"
+    },
   };
 
   return (
@@ -135,9 +161,11 @@ export default function Dashboard() {
           <span style={{ fontSize: "18px", fontWeight: "700", color: "#000" }}>STOCKPREDI</span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-          <span style={{ fontSize: "12px", color: planColor, fontWeight: "700", border: `1px solid ${planColor}`, padding: "2px 8px" }}>
-            {planLabel.toUpperCase()}
-          </span>
+          {!subLoading && (
+            <span style={{ fontSize: "12px", color: planColor, fontWeight: "700", border: `1px solid ${planColor}`, padding: "2px 8px" }}>
+              {planLabel.toUpperCase()}
+            </span>
+          )}
           <span style={{ fontSize: "13px", color: "#555" }}>{user?.email}</span>
           <button onClick={handleLogout} style={{ ...STYLE.btn("secondary"), padding: "6px 16px", fontSize: "13px" }}>
             Déconnexion
@@ -148,7 +176,7 @@ export default function Dashboard() {
       <div style={STYLE.main}>
         <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "8px" }}>Dashboard</h1>
         <p style={{ fontSize: "14px", color: "#555", marginBottom: "32px" }}>
-          Prévisions de stock alimentées par IA (Prophet + Llama)
+          Prévisions de stock IA pour PME françaises
         </p>
 
         {/* TABS */}
@@ -168,49 +196,92 @@ export default function Dashboard() {
         {/* TAB: FORECAST */}
         {tab === "forecast" && (
           <div>
-            <div style={STYLE.card}>
-              <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "20px" }}>Paramètres</h2>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
-                <div>
-                  <label style={STYLE.label}>Nom du produit</label>
-                  <input style={STYLE.input} value={productName} onChange={e => setProductName(e.target.value)} placeholder="Ex: Widget A" />
-                </div>
-                <div>
-                  <label style={STYLE.label}>Horizon de prévision (jours)</label>
-                  <select style={STYLE.input} value={periods} onChange={e => setPeriods(Number(e.target.value))}>
-                    <option value={7}>7 jours</option>
-                    <option value={14}>14 jours</option>
-                    <option value={30}>30 jours</option>
-                    <option value={60}>60 jours</option>
-                    <option value={90}>90 jours</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label style={STYLE.label}>Données CSV (colonnes: ds, y)</label>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display: "none" }} />
-                  <button onClick={() => fileRef.current.click()} style={STYLE.btn("secondary")}>
-                    Importer CSV
-                  </button>
-                  <span style={{ fontSize: "13px", color: "#555" }}>
-                    {data === SAMPLE_DATA ? "Données exemple chargées" : `${data.length} lignes importées`}
-                  </span>
-                </div>
-                {csvError && <p style={{ color: "#cc0000", fontSize: "13px", marginTop: "8px" }}>{csvError}</p>}
-                <p style={{ fontSize: "12px", color: "#888", marginTop: "8px" }}>
-                  Format attendu : première ligne = "ds,y", puis date ISO et quantité (ex: 2024-01-15,142)
+            {/* EMPTY STATE — no CSV loaded yet */}
+            {!data && !result && (
+              <div style={STYLE.emptyState}>
+                <div style={{ fontSize: "40px", marginBottom: "16px" }}>📁</div>
+                <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "8px", color: "#000" }}>
+                  Aucune prévision pour l'instant
+                </h2>
+                <p style={{ fontSize: "14px", marginBottom: "24px" }}>
+                  Importez un CSV avec vos données historiques pour démarrer.
                 </p>
-              </div>
-
-              <div style={{ marginTop: "24px" }}>
-                <button onClick={runForecast} disabled={loading || !!csvError} style={{ ...STYLE.btn("primary"), opacity: (loading || !!csvError) ? 0.6 : 1 }}>
-                  {loading ? "Analyse en cours..." : "Lancer la prévision IA"}
+                <button
+                  onClick={() => fileRef.current && fileRef.current.click()}
+                  style={STYLE.btn("primary")}
+                >
+                  Importer un CSV
                 </button>
+                <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display: "none" }} />
+                <div style={{ marginTop: "24px", fontSize: "12px", color: "#888", textAlign: "left", maxWidth: "400px", margin: "24px auto 0" }}>
+                  <strong>Format CSV attendu :</strong><br />
+                  <code style={{ background: "#f5f5f5", padding: "8px", display: "block", marginTop: "8px", fontSize: "11px" }}>
+                    ds,y<br />
+                    2024-01-01,120<br />
+                    2024-01-08,134<br />
+                    2024-01-15,118<br />
+                    ... (minimum 7 lignes)
+                  </code>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* FORM — CSV loaded */}
+            {(data || result) && (
+              <div style={STYLE.card}>
+                <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "20px" }}>Paramètres</h2>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
+                  <div>
+                    <label style={STYLE.label}>Nom du produit</label>
+                    <input style={STYLE.input} value={productName} onChange={e => setProductName(e.target.value)} placeholder="Ex: Widget A" />
+                  </div>
+                  <div>
+                    <label style={STYLE.label}>Horizon de prévision (jours)</label>
+                    <select style={STYLE.input} value={periods} onChange={e => setPeriods(Number(e.target.value))}>
+                      <option value={7}>7 jours</option>
+                      <option value={14}>14 jours</option>
+                      <option value={30}>30 jours</option>
+                      <option value={60}>60 jours</option>
+                      <option value={90}>90 jours</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={STYLE.label}>Fichier CSV</label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display: "none" }} />
+                    <button onClick={() => fileRef.current.click()} style={STYLE.btn("secondary")}>
+                      {data ? "Changer le fichier" : "Importer CSV"}
+                    </button>
+                    <span style={{ fontSize: "13px", color: data ? "#006600" : "#555" }}>
+                      {data ? `✓ ${data.length} lignes importées` : "Aucun fichier"}
+                    </span>
+                  </div>
+                  {csvError && <p style={{ color: "#cc0000", fontSize: "13px", marginTop: "8px" }}>{csvError}</p>}
+                  <p style={{ fontSize: "12px", color: "#888", marginTop: "8px" }}>
+                    Colonnes requises : ds (date ISO) et y (quantité)
+                  </p>
+                </div>
+
+                <div style={{ marginTop: "24px", display: "flex", gap: "12px", alignItems: "center" }}>
+                  <button
+                    onClick={runForecast}
+                    disabled={loading || !!csvError}
+                    style={{ ...STYLE.btn("primary"), opacity: (loading || !!csvError) ? 0.6 : 1 }}
+                  >
+                    {loading ? "Analyse en cours..." : "Lancer la prévision IA"}
+                  </button>
+                  <button
+                    onClick={() => { setData(null); setResult(null); setCsvError(""); setError(""); }}
+                    style={{ ...STYLE.btn("secondary"), fontSize: "13px", padding: "8px 16px" }}
+                  >
+                    Réinitialiser
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* RÉSULTATS */}
             {result && (
@@ -230,6 +301,11 @@ export default function Dashboard() {
                       {r.detail && <span style={{ color: "#555" }}> — {r.detail}</span>}
                     </div>
                   ))}
+                  {result.ai_source !== "ollama" && (
+                    <p style={{ fontSize: "11px", color: "#888", marginTop: "12px" }}>
+                      (recommandations basées sur règles métier — IA Llama indisponible)
+                    </p>
+                  )}
                 </div>
 
                 {/* ALERTES */}
@@ -290,10 +366,13 @@ export default function Dashboard() {
 
         {/* TAB: HISTORY */}
         {tab === "history" && (
-          <div style={STYLE.card}>
-            <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>Historique des prévisions</h2>
-            <p style={{ fontSize: "14px", color: "#555" }}>
-              L'historique sera disponible une fois le backend connecté et les prévisions sauvegardées en base.
+          <div style={STYLE.emptyState}>
+            <div style={{ fontSize: "40px", marginBottom: "16px" }}>📊</div>
+            <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "8px", color: "#000" }}>
+              Historique des prévisions
+            </h2>
+            <p style={{ fontSize: "14px" }}>
+              L'historique sera disponible une fois le backend connecté et les prévisions sauvegardées.
             </p>
           </div>
         )}
@@ -303,23 +382,28 @@ export default function Dashboard() {
           <div>
             <div style={STYLE.card}>
               <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>Mon abonnement</h2>
-              <p style={{ fontSize: "14px", marginBottom: "8px" }}>
-                Plan actuel : <strong style={{ color: planColor }}>{planLabel.toUpperCase()}</strong>
-              </p>
-              {planLabel !== "active" && (
-                <div style={{ marginTop: "16px" }}>
-                  <p style={{ fontSize: "14px", marginBottom: "16px", color: "#555" }}>
-                    Passez à l'abonnement payant pour un accès illimité — 35€/mois, annulation à tout moment.
+              {subLoading ? (
+                <p style={{ fontSize: "14px", color: "#888" }}>Chargement...</p>
+              ) : (
+                <>
+                  <p style={{ fontSize: "14px", marginBottom: "8px" }}>
+                    Plan actuel : <strong style={{ color: planColor }}>{planLabel.toUpperCase()}</strong>
                   </p>
-                  <button onClick={handleSubscribe} disabled={loading} style={STYLE.btn("primary")}>
-                    {loading ? "Redirection..." : "S'abonner — 35€/mois"}
-                  </button>
-                </div>
-              )}
-              {planLabel === "active" && (
-                <p style={{ fontSize: "14px", color: "#006600", marginTop: "8px" }}>
-                  Abonnement actif. Accès illimité à toutes les prévisions.
-                </p>
+                  {planLabel === "active" ? (
+                    <p style={{ fontSize: "14px", color: "#006600", marginTop: "8px" }}>
+                      ✓ Abonnement actif — accès illimité à toutes les prévisions.
+                    </p>
+                  ) : (
+                    <div style={{ marginTop: "16px" }}>
+                      <p style={{ fontSize: "14px", marginBottom: "16px", color: "#555" }}>
+                        Passez à l'abonnement payant pour un accès illimité — 35 €/mois, annulation à tout moment.
+                      </p>
+                      <button onClick={handleSubscribe} disabled={loading} style={{ ...STYLE.btn("primary"), opacity: loading ? 0.6 : 1 }}>
+                        {loading ? "Redirection..." : "S'abonner — 35 €/mois"}
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

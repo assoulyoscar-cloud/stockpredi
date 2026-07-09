@@ -14,18 +14,28 @@ export default function Signup() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    if (password !== confirm) { setError("Les mots de passe ne correspondent pas"); return; }
-    if (password.length < 8) { setError("Mot de passe minimum 8 caractères"); return; }
+    if (password !== confirm) { setError("❌ Les mots de passe ne correspondent pas."); return; }
+    if (password.length < 8) { setError("❌ Mot de passe trop court — minimum 8 caractères."); return; }
     setLoading(true);
     try {
-      const { error: err } = await supabase.auth.signUp({
+      const { data, error: err } = await supabase.auth.signUp({
         email, password,
         options: { emailRedirectTo: `${window.location.origin}/dashboard` }
       });
       if (err) throw err;
-      setSuccess(true);
+      // Si Supabase auto-confirme (email confirmation désactivé), on a une session directement
+      if (data?.session) {
+        navigate("/dashboard");
+      } else {
+        setSuccess(true);
+      }
     } catch (err) {
-      setError(err.message || "Inscription impossible");
+      const msg = err.message;
+      if (msg && msg !== "{}") {
+        setError(`❌ Inscription impossible — ${msg}`);
+      } else {
+        setError("❌ Inscription impossible. Vérifiez votre email ou réessayez.");
+      }
     } finally {
       setLoading(false);
     }
@@ -35,12 +45,14 @@ export default function Signup() {
     return (
       <div style={{ fontFamily: "Courier New, monospace", background: "#fff", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center", maxWidth: "400px", padding: "32px" }}>
-          <h1 style={{ fontSize: "28px", fontWeight: "700", marginBottom: "16px" }}>Vérifiez votre email</h1>
+          <h1 style={{ fontSize: "28px", fontWeight: "700", marginBottom: "16px" }}>Compte créé ✓</h1>
           <p style={{ fontSize: "16px", lineHeight: "1.6", color: "#333" }}>
             Un email de confirmation a été envoyé à <strong>{email}</strong>.<br />
-            Cliquez sur le lien pour activer votre compte et démarrer votre essai gratuit de 14 jours.
+            Cliquez sur le lien pour activer votre compte.
           </p>
-          <Link to="/" style={{ display: "inline-block", marginTop: "32px", textDecoration: "underline", color: "#000" }}>← Retour à l'accueil</Link>
+          <Link to="/login" style={{ display: "inline-block", marginTop: "32px", background: "#000", color: "#fff", padding: "12px 32px", textDecoration: "none", fontWeight: "700", fontSize: "14px" }}>
+            Se connecter →
+          </Link>
         </div>
       </div>
     );

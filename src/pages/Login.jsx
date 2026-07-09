@@ -18,7 +18,14 @@ export default function Login() {
       if (err) throw err;
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message || "Connexion impossible");
+      const msg = err.message;
+      if (msg?.toLowerCase().includes("invalid")) {
+        setError("❌ Email ou mot de passe incorrect.");
+      } else if (msg?.toLowerCase().includes("email not confirmed")) {
+        setError("❌ Email non confirmé — vérifiez votre boîte mail.");
+      } else {
+        setError(`❌ Connexion impossible — ${msg || "réessayez dans quelques secondes."}`);
+      }
     } finally {
       setLoading(false);
     }
