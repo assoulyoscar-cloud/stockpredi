@@ -1,7 +1,6 @@
 import { supabase } from "./supabaseClient";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
-
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "https://stockpredi-backend.onrender.com";
 async function getAuthHeaders() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) throw new Error("Non authentifié");
