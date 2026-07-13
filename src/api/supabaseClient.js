@@ -4,7 +4,7 @@ const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn("Supabase config missing — check env variables");
+  console.warn('Supabase config missing - check env variables');
 }
 
 export const supabase = supabaseUrl && supabaseAnonKey
@@ -12,7 +12,7 @@ export const supabase = supabaseUrl && supabaseAnonKey
   : null;
 
 /**
- * Capture un email dans la table "emails"
+ * Capture un email dans la table emails
  */
 export async function captureEmail(email, source = 'landing') {
   if (!supabase) {
@@ -32,7 +32,7 @@ export async function captureEmail(email, source = 'landing') {
 }
 
 /**
- * Retourne l'utilisateur connecte ou null
+ * Retourne l utilisateur connecte ou null
  */
 export async function getCurrentUser() {
   if (!supabase) return null;
