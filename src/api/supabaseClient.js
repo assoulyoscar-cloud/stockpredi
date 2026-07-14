@@ -21,7 +21,7 @@ export async function captureEmail(email, source = 'landing') {
   }
   const { data, error } = await supabase
     .from('emails')
-    .insert([{ email: email.trim().toLowerCase(), source }]);
+    .insert({ email: email.trim().toLowerCase(), source });
 
   if (error) {
     // 23505 = unique violation (email déjà enregistré) → succès silencieux
