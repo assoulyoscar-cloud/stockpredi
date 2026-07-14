@@ -117,7 +117,7 @@ def webhook():
     s = get_stripe()
     try:
         event = s.Webhook.construct_event(payload, sig_header, Config.STRIPE_WEBHOOK_SECRET)
-    except stripe.errors.SignatureVerificationError:
+    except stripe.error.SignatureVerificationError:
         return jsonify({"error": "Signature invalide"}), 400
 
     supabase = get_admin_client()
