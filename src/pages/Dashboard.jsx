@@ -27,6 +27,8 @@ export default function Dashboard() {
   const [csvError, setCsvError] = useState("");
   const [subStatus, setSubStatus] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
+  const [history, setHistory] = useState(null); // null = pas encore charge
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -38,6 +40,35 @@ export default function Dashboard() {
       .catch(() => setSubStatus({ plan: "active" })) // fallback bypass
       .finally(() => setSubLoading(false));
   }, [navigate]);
+
+  useEffect(() => {
+    if (tab === "history" && history === null && user) {
+      setHistoryLoading(true);
+      supabase
+        .from("predictions")
+        .select("id, filename, forecast_data, created_at")
+        .order("created_at", { ascending: false })
+        .limit(20)
+        .then(({ data: rows, error: histErr }) => {
+          if (histErr) { console.error("Historique:", histErr.message); setHistory([]); }
+          else setHistory(rows || []);
+          setHistoryLoading(false);
+        });
+    }
+  }, [tab, history, user]);
+
+  async function deletePrediction(id) {
+    const { error: delErr } = await supabase.from("predictions").delete().eq("id", id);
+    if (!delErr) setHistory(h => (h || []).filter(r => r.id !== id));
+  }
+
+  function viewPrediction(row) {
+    const fd = row.forecast_data || {};
+    setResult(fd);
+    setProductName(fd.product_name || row.filename || "Mon produit");
+    if (fd.periods) setPeriods(fd.periods);
+    setTab("forecast");
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -96,6 +127,16 @@ export default function Dashboard() {
       const payload = data || SAMPLE_DATA;
       const res = await backendClient.recommendations(payload, productName, periods);
       setResult(res);
+      // Sauvegarde dans l'historique (Supabase direct — pas de dependance backend)
+      if (user) {
+        const { error: saveErr } = await supabase.from("predictions").insert({
+          user_id: user.id,
+          filename: productName || "Sans nom",
+          forecast_data: { ...res, product_name: productName, periods, data_points: payload.length }
+        });
+        if (saveErr) console.error("Sauvegarde historique:", saveErr.message);
+        else setHistory(null); // force le rechargement au prochain passage sur l'onglet
+      }
     } catch (err) {
       setError(`❌ Prévision impossible — ${err.message || "Erreur serveur. Réessayez dans quelques secondes."}`);
     } finally {
@@ -329,7 +370,7 @@ export default function Dashboard() {
                     </span>
                   </h2>
                   <p style={{ fontSize: "12px", color: "#555", marginBottom: "16px" }}>
-                    Tendance : <strong>{result.trend}</strong> · {result.forecast?.data_points} points d'historique
+                    Tendance : <strong>{result.trend}</strong> · {result.forecast?.data_points ?? (data ? data.length : "\u2014")} points d'historique
                   </p>
                   <div style={{ overflowX: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
@@ -366,14 +407,69 @@ export default function Dashboard() {
 
         {/* TAB: HISTORY */}
         {tab === "history" && (
-          <div style={STYLE.emptyState}>
-            <div style={{ fontSize: "40px", marginBottom: "16px" }}>📊</div>
-            <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "8px", color: "#000" }}>
-              Historique des prévisions
-            </h2>
-            <p style={{ fontSize: "14px" }}>
-              L'historique sera disponible une fois le backend connecté et les prévisions sauvegardées.
-            </p>
+          <div>
+            {historyLoading && (
+              <p style={{ fontSize: "14px", color: "#888" }}>Chargement de l'historique...</p>
+            )}
+            {!historyLoading && (history || []).length === 0 && (
+              <div style={STYLE.emptyState}>
+                <div style={{ fontSize: "40px", marginBottom: "16px" }}>📊</div>
+                <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "8px", color: "#000" }}>
+                  Historique des prévisions
+                </h2>
+                <p style={{ fontSize: "14px" }}>
+                  Aucune prévision sauvegardée pour l'instant. Lancez votre première prévision !
+                </p>
+              </div>
+            )}
+            {!historyLoading && (history || []).length > 0 && (
+              <div style={STYLE.card}>
+                <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>
+                  Historique des prévisions
+                  <span style={{ fontSize: "11px", fontWeight: "400", color: "#888", marginLeft: "8px" }}>
+                    {history.length} sauvegardée{history.length > 1 ? "s" : ""}
+                  </span>
+                </h2>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid #000" }}>
+                        <th style={{ textAlign: "left", padding: "8px", fontWeight: "700" }}>Date</th>
+                        <th style={{ textAlign: "left", padding: "8px", fontWeight: "700" }}>Produit</th>
+                        <th style={{ textAlign: "right", padding: "8px", fontWeight: "700" }}>Horizon</th>
+                        <th style={{ textAlign: "left", padding: "8px", fontWeight: "700" }}>Tendance</th>
+                        <th style={{ textAlign: "right", padding: "8px", fontWeight: "700" }}>Précision</th>
+                        <th style={{ padding: "8px" }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.map((row) => {
+                        const fd = row.forecast_data || {};
+                        return (
+                          <tr key={row.id} style={{ borderBottom: "1px solid #eee" }}>
+                            <td style={{ padding: "8px" }}>{new Date(row.created_at).toLocaleDateString("fr-FR")}</td>
+                            <td style={{ padding: "8px", fontWeight: "700" }}>{fd.product_name || row.filename}</td>
+                            <td style={{ padding: "8px", textAlign: "right" }}>{fd.periods ? `${fd.periods} j` : "—"}</td>
+                            <td style={{ padding: "8px" }}>{fd.trend || "—"}</td>
+                            <td style={{ padding: "8px", textAlign: "right" }}>
+                              {fd.forecast?.accuracy_score != null ? `${(fd.forecast.accuracy_score * 100).toFixed(0)}%` : "—"}
+                            </td>
+                            <td style={{ padding: "8px", textAlign: "right", whiteSpace: "nowrap" }}>
+                              <button onClick={() => viewPrediction(row)} style={{ ...STYLE.btn("secondary"), padding: "4px 10px", fontSize: "12px", marginRight: "8px" }}>
+                                Voir
+                              </button>
+                              <button onClick={() => deletePrediction(row.id)} style={{ ...STYLE.btn("secondary"), padding: "4px 10px", fontSize: "12px", color: "#cc0000", borderColor: "#cc0000" }}>
+                                Suppr.
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
