@@ -62,7 +62,7 @@ export default function Login() {
               placeholder="votre@email.com"
             />
           </div>
-          <div style={{ marginBottom: "24px" }}>
+          <div style={{ marginBottom: "12px" }}>
             <label style={{ display: "block", fontWeight: "700", marginBottom: "8px", fontSize: "14px" }}>Mot de passe</label>
             <input
               type="password"
@@ -73,6 +73,9 @@ export default function Login() {
               placeholder="••••••••"
             />
           </div>
+          <p style={{ textAlign: "right", marginBottom: "24px" }}>
+            <Link to="/forgot-password" style={{ textDecoration: "underline", color: "#000", fontSize: "13px" }}>Mot de passe oublié ?</Link>
+          </p>
           <button
             type="submit"
             disabled={loading}
