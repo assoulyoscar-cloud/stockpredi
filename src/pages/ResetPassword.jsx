@@ -13,10 +13,23 @@ export default function ResetPassword() {
   const [tokenValid, setTokenValid] = useState(false);
 
   useEffect(() => {
+    // Si Supabase a redirigé avec une erreur explicite dans le hash
+    // (lien expiré, déjà utilisé, invalide...), on l'affiche immédiatement
+    // sans attendre — et surtout sans se fier à une session existante.
+    const hash = window.location.hash || "";
+    if (hash.includes("error=")) {
+      setCheckingToken(false);
+      setTokenValid(false);
+      return;
+    }
+
     let resolved = false;
 
     // Le lien de reset Supabase déclenche l'event PASSWORD_RECOVERY une fois
-    // le token du lien parsé et la session temporaire créée par le SDK.
+    // le token du lien parsé et la session temporaire de récupération créée
+    // par le SDK. C'est le SEUL signal fiable : on ne se base jamais sur une
+    // session déjà existante (getSession) car un utilisateur déjà connecté
+    // dans ce navigateur ferait passer un lien expiré/invalide pour valide.
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         resolved = true;
@@ -25,18 +38,8 @@ export default function ResetPassword() {
       }
     });
 
-    // Filet de sécurité : si une session existe déjà au montage (cas où
-    // l'event a été émis avant l'attache du listener).
-    supabase.auth.getSession().then(({ data }) => {
-      if (!resolved && data?.session) {
-        resolved = true;
-        setTokenValid(true);
-        setCheckingToken(false);
-      }
-    });
-
-    // Si après quelques secondes aucune session de récupération n'est
-    // détectée, le lien est invalide ou expiré.
+    // Si après quelques secondes aucun event de récupération n'est reçu,
+    // le lien est invalide ou expiré.
     const timeout = setTimeout(() => {
       if (!resolved) {
         setCheckingToken(false);
