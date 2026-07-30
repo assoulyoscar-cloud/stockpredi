@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,8 +15,7 @@ export default function ResetPassword() {
 
   useEffect(() => {
     // Si Supabase a redirigé avec une erreur explicite dans le hash
-    // (lien expiré, déjà utilisé, invalide...), on l'affiche immédiatement
-    // sans attendre — et surtout sans se fier à une session existante.
+    // (lien expiré, déjà utilisé, invalide...), on l'affiche immédiatement.
     const hash = window.location.hash || "";
     if (hash.includes("error=")) {
       setCheckingToken(false);
@@ -23,13 +23,29 @@ export default function ResetPassword() {
       return;
     }
 
-    let resolved = false;
+    const tokenHash = searchParams.get("token_hash");
+    const type = searchParams.get("type");
 
-    // Le lien de reset Supabase déclenche l'event PASSWORD_RECOVERY une fois
-    // le token du lien parsé et la session temporaire de récupération créée
-    // par le SDK. C'est le SEUL signal fiable : on ne se base jamais sur une
-    // session déjà existante (getSession) car un utilisateur déjà connecté
-    // dans ce navigateur ferait passer un lien expiré/invalide pour valide.
+    if (tokenHash && type === "recovery") {
+      // Format de lien recommandé par Supabase pour les SPA : on vérifie le
+      // token nous-mêmes plutôt que de dépendre de la redirection
+      // automatique via xbachldmxbjqktyqxzum.supabase.co/auth/v1/verify,
+      // que le click-tracking du fournisseur SMTP peut altérer en transit.
+      supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" }).then(({ error: err }) => {
+        if (err) {
+          setCheckingToken(false);
+          setTokenValid(false);
+        } else {
+          setTokenValid(true);
+          setCheckingToken(false);
+        }
+      });
+      return;
+    }
+
+    // Filet de compatibilité pour l'ancien format de lien (redirection via
+    // /auth/v1/verify), qui déclenche l'event PASSWORD_RECOVERY côté client.
+    let resolved = false;
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         resolved = true;
@@ -38,8 +54,6 @@ export default function ResetPassword() {
       }
     });
 
-    // Si après quelques secondes aucun event de récupération n'est reçu,
-    // le lien est invalide ou expiré.
     const timeout = setTimeout(() => {
       if (!resolved) {
         setCheckingToken(false);
@@ -51,7 +65,7 @@ export default function ResetPassword() {
       listener?.subscription?.unsubscribe();
       clearTimeout(timeout);
     };
-  }, []);
+  }, [searchParams]);
 
   async function handleSubmit(e) {
     e.preventDefault();
