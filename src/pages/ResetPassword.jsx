@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useParams } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const params = useParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,7 +24,13 @@ export default function ResetPassword() {
       return;
     }
 
-    const tokenHash = searchParams.get("token_hash");
+    // Le token_hash peut arriver soit dans le chemin de l'URL
+    // (/reset-password/<token_hash>), soit en query string
+    // (?token_hash=...). On préfère le format "chemin" car le
+    // click-tracking de certains fournisseurs SMTP (ex: AWS SES via
+    // Resend) corrompt de manière systématique le caractère "=" juste
+    // après "token_hash" en query string lors du transit de l'email.
+    const tokenHash = params.tokenHash || searchParams.get("token_hash");
     const type = searchParams.get("type");
 
     if (tokenHash && type === "recovery") {
@@ -65,7 +72,7 @@ export default function ResetPassword() {
       listener?.subscription?.unsubscribe();
       clearTimeout(timeout);
     };
-  }, [searchParams]);
+  }, [searchParams, params.tokenHash]);
 
   async function handleSubmit(e) {
     e.preventDefault();
