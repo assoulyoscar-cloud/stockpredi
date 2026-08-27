@@ -1,26 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { captureEmail } from '../api/supabaseClient';
 
 export default function Landing() {
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-
-  const [submitError, setSubmitError] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitError('');
-    const result = await captureEmail(email, 'landing');
-    if (result.success) {
-      setSubmitted(true);
-      setEmail('');
-      setTimeout(() => setSubmitted(false), 3000);
-    } else {
-      setSubmitError('Erreur : ' + result.error);
-    }
-  };
-
   return (
     <div style={{ fontFamily: 'Courier New, monospace', color: '#000000', backgroundColor: '#FFFFFF' }}>
 
@@ -38,9 +19,21 @@ export default function Landing() {
             <img src="/logoSTOCKPREDI.png" alt="StockPredi" style={{ height: '32px', width: 'auto' }} />
             <span style={{ fontSize: '18px', fontWeight: '700', color: '#000000' }}>STOCKPREDI</span>
           </Link>
-          <a href="#contact" style={{ textDecoration: 'underline', color: '#000000', cursor: 'pointer', fontSize: '14px' }}>
-            Essai gratuit
-          </a>
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <Link to="/login" style={{ textDecoration: 'none', color: '#000000', fontSize: '14px', fontWeight: '700' }}>
+              Connexion
+            </Link>
+            <Link to="/signup" style={{
+              background: '#000000',
+              color: '#FFFFFF',
+              padding: '8px 16px',
+              textDecoration: 'none',
+              fontSize: '14px',
+              fontWeight: '700'
+            }}>
+              Créer un compte
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -56,7 +49,7 @@ export default function Landing() {
           StockPredi analyse votre historique de ventes et predit exactement quoi commander, quand, et en quelle quantite. En 2 minutes.
         </p>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <a href="#contact" style={{
+          <Link to="/signup" style={{
             background: '#000000',
             color: '#FFFFFF',
             padding: '14px 28px',
@@ -65,11 +58,20 @@ export default function Landing() {
             fontSize: '14px',
             display: 'inline-block'
           }}>
-            ESSAI GRATUIT 14 JOURS
-          </a>
-          <span style={{ fontSize: '14px', color: '#666666', lineHeight: '1', alignSelf: 'center' }}>
-            Sans carte bancaire
-          </span>
+            COMMENCER
+          </Link>
+          <Link to="/login" style={{
+            background: '#FFFFFF',
+            color: '#000000',
+            border: '2px solid #000000',
+            padding: '14px 28px',
+            textDecoration: 'none',
+            fontWeight: '700',
+            fontSize: '14px',
+            display: 'inline-block'
+          }}>
+            SE CONNECTER
+          </Link>
         </div>
       </section>
 
@@ -122,84 +124,13 @@ export default function Landing() {
       {/* SEPARATEUR */}
       <div style={{ borderTop: '1px solid #000000', maxWidth: '680px', margin: '0 auto' }} />
 
-      {/* RESULTATS */}
-      <section style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 32px' }}>
-        <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '32px' }}>Resultats clients</h2>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          {[
-            ['-32%', 'de ruptures de stock'],
-            ['-28%', 'de surplus inutiles'],
-            ['4h', 'economisees par semaine'],
-          ].map(([stat, label]) => (
-            <div key={stat} style={{ border: '1px solid #000000', padding: '24px', flex: '1', minWidth: '140px' }}>
-              <p style={{ fontSize: '36px', fontWeight: '700', margin: '0 0 4px 0' }}>{stat}</p>
-              <p style={{ fontSize: '13px', color: '#333333', margin: 0 }}>{label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* SEPARATEUR */}
-      <div style={{ borderTop: '1px solid #000000', maxWidth: '680px', margin: '0 auto' }} />
-
-      {/* TEMOIGNAGES */}
-      <section style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 32px' }}>
-        <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '8px' }}>Ce qu'ils disent</h2>
-        <p style={{ fontSize: '14px', color: '#666666', marginBottom: '32px' }}>Bêta-testeurs ayant eu accès anticipé</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-          <div style={{ border: '1px solid #000000', padding: '24px' }}>
-            <p style={{ fontSize: '15px', lineHeight: '1.6', marginBottom: '16px', fontStyle: 'italic' }}>
-              "On commandait à l'instinct depuis 10 ans. StockPredi nous a montré qu'on sur-stockait de 30% sur 3 références. Résultat : 4 000€ récupérés en 2 mois."
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '36px', height: '36px', border: '1px solid #000000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700', flexShrink: 0 }}>ML</div>
-              <div>
-                <p style={{ fontSize: '13px', fontWeight: '700', margin: 0 }}>Marie L.</p>
-                <p style={{ fontSize: '12px', color: '#666666', margin: 0 }}>Gérante, boutique mode en ligne — 12 employés</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ border: '1px solid #000000', padding: '24px' }}>
-            <p style={{ fontSize: '15px', lineHeight: '1.6', marginBottom: '16px', fontStyle: 'italic' }}>
-              "J'ai uploadé 2 ans d'historique Excel. En 3 minutes j'avais mes prévisions pour Noël. C'est exactement ce dont j'avais besoin."
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '36px', height: '36px', border: '1px solid #000000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700', flexShrink: 0 }}>TR</div>
-              <div>
-                <p style={{ fontSize: '13px', fontWeight: '700', margin: 0 }}>Thomas R.</p>
-                <p style={{ fontSize: '12px', color: '#666666', margin: 0 }}>Directeur logistique, distributeur alimentaire — 8 employés</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ border: '1px solid #000000', padding: '24px' }}>
-            <p style={{ fontSize: '15px', lineHeight: '1.6', marginBottom: '16px', fontStyle: 'italic' }}>
-              "Simple, rapide, et ça marche. On a réduit nos ruptures de 40% sur le premier mois. Aucun abonnement SaaS ne nous a autant rapporté aussi vite."
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '36px', height: '36px', border: '1px solid #000000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700', flexShrink: 0 }}>SB</div>
-              <div>
-                <p style={{ fontSize: '13px', fontWeight: '700', margin: 0 }}>Sophie B.</p>
-                <p style={{ fontSize: '12px', color: '#666666', margin: 0 }}>Co-fondatrice, e-commerce cosmétiques — 6 employés</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* SEPARATEUR */}
-      <div style={{ borderTop: '1px solid #000000', maxWidth: '680px', margin: '0 auto' }} />
-
       {/* BADGES CONFIANCE */}
       <section style={{ maxWidth: '680px', margin: '0 auto', padding: '48px 32px' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
           {[
             ['RGPD', 'Conforme'],
             ['DATA EU', 'Hébergé en Europe'],
-            ['0 CARTE', 'Trial sans CB'],
+            ['SECURITE', 'Données chiffrées'],
             ['<4H', 'Support garanti'],
           ].map(([title, sub]) => (
             <div key={title} style={{ border: '1px solid #000000', padding: '16px 20px', textAlign: 'center', flex: '1', minWidth: '120px' }}>
@@ -221,7 +152,7 @@ export default function Landing() {
             35 EUR<span style={{ fontSize: '18px', fontWeight: '400', color: '#333333' }}>/mois</span>
           </p>
           <p style={{ fontSize: '14px', color: '#333333', marginBottom: '24px' }}>
-            Essai gratuit 14 jours - Sans engagement - Annulation a tout moment
+            Sans engagement — Annulation a tout moment
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {[
@@ -238,7 +169,7 @@ export default function Landing() {
               </div>
             ))}
           </div>
-          <a href="#contact" style={{
+          <Link to="/signup" style={{
             background: '#000000',
             color: '#FFFFFF',
             padding: '14px 28px',
@@ -247,66 +178,51 @@ export default function Landing() {
             fontSize: '14px',
             display: 'inline-block'
           }}>
-            COMMENCER L ESSAI GRATUIT
-          </a>
+            CREER MON COMPTE
+          </Link>
         </div>
       </section>
 
       {/* SEPARATEUR */}
       <div style={{ borderTop: '1px solid #000000', maxWidth: '680px', margin: '0 auto' }} />
 
-      {/* CONTACT */}
-      <section id="contact" style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 32px' }}>
-        <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '16px' }}>Demarrer l essai gratuit</h2>
-        <p style={{ fontSize: '16px', color: '#333333', marginBottom: '32px' }}>
-          14 jours gratuits, sans carte bancaire. On vous envoie les acces par email.
+      {/* ENCADRE CONNEXION / COMPTE */}
+      <section style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 32px' }}>
+        <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '16px' }}>Acces a la plateforme</h2>
+        <p style={{ fontSize: '15px', color: '#333333', marginBottom: '32px' }}>
+          Deja client ou pret a demarrer ? Accedez directement a votre espace.
         </p>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0', flexWrap: 'wrap' }}>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="votre@email.fr"
-            style={{
-              flex: '1',
-              minWidth: '200px',
-              border: '2px solid #000000',
-              borderRight: 'none',
-              padding: '14px 16px',
-              fontSize: '14px',
-              fontFamily: 'Courier New, monospace',
-              outline: 'none',
-            }}
-          />
-          <button type="submit" style={{
+        <div style={{ border: '2px solid #000000', padding: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <Link to="/login" style={{
+            background: '#FFFFFF',
+            color: '#000000',
+            border: '2px solid #000000',
+            padding: '16px 28px',
+            textDecoration: 'none',
+            fontWeight: '700',
+            fontSize: '15px',
+            display: 'block',
+            textAlign: 'center'
+          }}>
+            SE CONNECTER
+          </Link>
+          <div style={{ textAlign: 'center', fontSize: '13px', color: '#666666' }}>ou</div>
+          <Link to="/signup" style={{
             background: '#000000',
             color: '#FFFFFF',
-            border: '2px solid #000000',
-            padding: '14px 24px',
-            fontSize: '14px',
+            padding: '16px 28px',
+            textDecoration: 'none',
             fontWeight: '700',
-            cursor: 'pointer',
-            fontFamily: 'Courier New, monospace',
-            whiteSpace: 'nowrap',
+            fontSize: '15px',
+            display: 'block',
+            textAlign: 'center'
           }}>
-            ESSAI GRATUIT
-          </button>
-        </form>
-        {submitted && (
-          <p style={{ fontSize: '14px', color: '#333333', marginTop: '16px' }}>
-            ✓ Vous allez recevoir un email avec vos accès sous 5 minutes.
+            CREER UN COMPTE
+          </Link>
+          <p style={{ fontSize: '12px', color: '#666666', margin: 0, textAlign: 'center' }}>
+            Une question ? <a href="mailto:contact@stockpredi.fr" style={{ color: '#000000' }}>contact@stockpredi.fr</a>
           </p>
-        )}
-        {submitError && (
-          <p style={{ fontSize: '14px', color: '#cc0000', marginTop: '16px' }}>
-            {submitError}
-          </p>
-        )}
-        <p style={{ fontSize: '13px', color: '#666666', marginTop: '16px' }}>
-          Ou ecrivez-nous directement :{' '}
-          <a href="mailto:contact@stockpredi.fr" style={{ color: '#000000' }}>contact@stockpredi.fr</a>
-        </p>
+        </div>
       </section>
 
       {/* SEPARATEUR */}
