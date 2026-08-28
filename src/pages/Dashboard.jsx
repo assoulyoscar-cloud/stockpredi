@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
 import { backendClient } from "../api/backendClient";
+import * as XLSX from "xlsx";
 
 const SAMPLE_DATA = [
   {ds:"2024-01-01",y:120},{ds:"2024-01-08",y:134},{ds:"2024-01-15",y:118},
@@ -75,48 +76,107 @@ export default function Dashboard() {
     navigate("/");
   }
 
-  function parseCsv(text) {
-    const lines = text.trim().split("\n").filter(l => l.trim());
-    if (lines.length < 2) {
-      throw new Error("❌ CSV trop court — minimum 2 lignes requises (en-tête + données).");
+  // Correspondances colonnes flexibles
+  const COL_ALIASES = {
+    ds: ["ds", "date", "Date", "DATE", "jour", "Jour", "JOUR", "Jour_livraison", "periode", "Periode", "PERIODE", "mois", "Mois", "MOIS", "semaine", "Semaine", "SEMAINE"],
+    y:  ["y", "Y", "qty", "Qty", "QTY", "quantite", "Quantite", "QUANTITE", "quantity", "Quantity",
+         "ventes", "Ventes", "VENTES", "stock", "Stock", "STOCK", "valeur", "Valeur", "VALEUR",
+         "montant", "Montant", "MONTANT", "ca", "CA", "chiffre"]
+  };
+
+  function findCol(headers, field) {
+    return headers.findIndex(h => COL_ALIASES[field].includes(h.trim()));
+  }
+
+  function normalizeDate(raw) {
+    if (!raw) return null;
+    const s = String(raw).trim();
+    // Format ISO direct
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    // FR dd/mm/yyyy ou dd-mm-yyyy
+    const fr = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+    if (fr) return `${fr[3]}-${String(fr[2]).padStart(2,"0")}-${String(fr[1]).padStart(2,"0")}`;
+    // US mm/dd/yyyy
+    const us = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (us) {
+      const m = parseInt(us[1]), d = parseInt(us[2]);
+      if (m > 12) return `${us[3]}-${String(d).padStart(2,"0")}-${String(m).padStart(2,"0")}`;
+      return `${us[3]}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
     }
-    const header = lines[0].toLowerCase().replace(/\r/g, "").split(",").map(h => h.trim());
-    const missing = REQUIRED_COLS.filter(col => !header.includes(col));
-    if (missing.length > 0) {
-      throw new Error(`❌ Colonnes manquantes : ${missing.join(", ")}. Format attendu : ds, y`);
+    // Numéro série Excel (nombre de jours depuis 1900-01-01)
+    const n = parseFloat(s);
+    if (!isNaN(n) && n > 1000 && n < 100000) {
+      const d = new Date(Math.round((n - 25569) * 86400 * 1000));
+      return d.toISOString().slice(0, 10);
     }
-    const dsIdx = header.indexOf("ds");
-    const yIdx = header.indexOf("y");
-    const rows = lines.slice(1).map(line => {
-      const cols = line.replace(/\r/g, "").split(",");
-      return { ds: (cols[dsIdx] || "").trim(), y: parseFloat(cols[yIdx]) };
-    }).filter(r => r.ds && !isNaN(r.y));
-    if (rows.length < 7) {
-      throw new Error("❌ Données insuffisantes — minimum 7 lignes de données requises.");
-    }
+    return null;
+  }
+
+  function rowsFromMatrix(matrix) {
+    if (!matrix || matrix.length < 2) throw new Error("❌ Fichier trop court — minimum 2 lignes requises.");
+    const rawHeader = matrix[0].map(h => String(h ?? "").trim());
+    const dsIdx = findCol(rawHeader, "ds");
+    const yIdx  = findCol(rawHeader, "y");
+    if (dsIdx < 0) throw new Error(`❌ Colonne date introuvable. Colonnes détectées : ${rawHeader.join(", ")}. Renommez-la "ds", "date", "Date", "jour" ou "mois".`);
+    if (yIdx  < 0) throw new Error(`❌ Colonne quantité introuvable. Colonnes détectées : ${rawHeader.join(", ")}. Renommez-la "y", "qty", "quantite", "ventes" ou "stock".`);
+    const rows = matrix.slice(1)
+      .map(row => ({ ds: normalizeDate(row[dsIdx]), y: parseFloat(String(row[yIdx] ?? "").replace(",", ".")) }))
+      .filter(r => r.ds && !isNaN(r.y));
+    if (rows.length < 7) throw new Error("❌ Données insuffisantes — minimum 7 lignes de données valides requises.");
     return rows;
+  }
+
+  function parseCsv(text) {
+    // Supprimer BOM UTF-8 éventuel
+    const clean = text.replace(/^\uFEFF/, "");
+    const lines = clean.trim().split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) throw new Error("❌ CSV trop court — minimum 2 lignes requises.");
+    // Détecter le séparateur (virgule ou point-virgule)
+    const sep = (lines[0].split(";").length > lines[0].split(",").length) ? ";" : ",";
+    const matrix = lines.map(l => l.split(sep));
+    return rowsFromMatrix(matrix);
   }
 
   function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (!file.name.endsWith(".csv")) {
-      setCsvError("❌ Format invalide — seuls les fichiers .csv sont acceptés.");
+    const name = file.name.toLowerCase();
+    const isExcel = name.endsWith(".xlsx") || name.endsWith(".xls");
+    const isCsv   = name.endsWith(".csv");
+    if (!isExcel && !isCsv) {
+      setCsvError("❌ Format non supporté — utilisez un fichier .csv, .xlsx ou .xls");
       return;
     }
     setCsvError("");
     const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const parsed = parseCsv(ev.target.result);
-        setData(parsed);
-        setResult(null);
-      } catch (err) {
-        setCsvError(err.message);
-        setData(null);
-      }
-    };
-    reader.readAsText(file);
+    if (isExcel) {
+      reader.onload = ev => {
+        try {
+          const wb = XLSX.read(ev.target.result, { type: "array", cellDates: false });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+          const parsed = rowsFromMatrix(matrix);
+          setData(parsed);
+          setResult(null);
+        } catch (err) {
+          setCsvError(err.message);
+          setData(null);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.onload = ev => {
+        try {
+          const parsed = parseCsv(ev.target.result);
+          setData(parsed);
+          setResult(null);
+        } catch (err) {
+          setCsvError(err.message);
+          setData(null);
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+    }
   }
 
   async function runForecast() {
@@ -251,11 +311,11 @@ export default function Dashboard() {
                   onClick={() => fileRef.current && fileRef.current.click()}
                   style={STYLE.btn("primary")}
                 >
-                  Importer un CSV
+                  Importer CSV ou Excel
                 </button>
-                <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display: "none" }} />
+                <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} style={{ display: "none" }} />
                 <div style={{ marginTop: "24px", fontSize: "12px", color: "#888", textAlign: "left", maxWidth: "400px", margin: "24px auto 0" }}>
-                  <strong>Format CSV attendu :</strong><br />
+                  <strong>Formats acceptés : .csv · .xlsx · .xls</strong><br />
                   <code style={{ background: "#f5f5f5", padding: "8px", display: "block", marginTop: "8px", fontSize: "11px" }}>
                     ds,y<br />
                     2024-01-01,120<br />
@@ -292,9 +352,9 @@ export default function Dashboard() {
                 <div>
                   <label style={STYLE.label}>Fichier CSV</label>
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <input ref={fileRef} type="file" accept=".csv" onChange={handleFile} style={{ display: "none" }} />
+                    <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} style={{ display: "none" }} />
                     <button onClick={() => fileRef.current.click()} style={STYLE.btn("secondary")}>
-                      {data ? "Changer le fichier" : "Importer CSV"}
+                      {data ? "Changer le fichier" : "Importer CSV / Excel"}
                     </button>
                     <span style={{ fontSize: "13px", color: data ? "#006600" : "#555" }}>
                       {data ? `✓ ${data.length} lignes importées` : "Aucun fichier"}
@@ -302,7 +362,7 @@ export default function Dashboard() {
                   </div>
                   {csvError && <p style={{ color: "#cc0000", fontSize: "13px", marginTop: "8px" }}>{csvError}</p>}
                   <p style={{ fontSize: "12px", color: "#888", marginTop: "8px" }}>
-                    Colonnes requises : ds (date ISO) et y (quantité)
+                    CSV ou Excel — colonnes : date (ds, date, Date...) et quantité (y, qty, quantite...)
                   </p>
                 </div>
 
@@ -454,7 +514,7 @@ export default function Dashboard() {
                             <td style={{ padding: "8px", textAlign: "right" }}>
                               {fd.forecast?.accuracy_score != null ? `${(fd.forecast.accuracy_score * 100).toFixed(0)}%` : "—"}
                             </td>
-                            <td style={{ padding: "8px", textAlign: "right", whiteSpace: "nowrap" }}>
+                          <td style={{ padding: "8px", textAlign: "right", whiteSpace: "nowrap" }}>
                               <button onClick={() => viewPrediction(row)} style={{ ...STYLE.btn("secondary"), padding: "4px 10px", fontSize: "12px", marginRight: "8px" }}>
                                 Voir
                               </button>
@@ -478,7 +538,7 @@ export default function Dashboard() {
           <div>
             <div style={STYLE.card}>
               <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>Mon abonnement</h2>
-              {subLoading ? (
+              {subLomding ? (
                 <p style={{ fontSize: "14px", color: "#888" }}>Chargement...</p>
               ) : (
                 <>
@@ -492,30 +552,8 @@ export default function Dashboard() {
                   ) : (
                     <div style={{ marginTop: "16px" }}>
                       <p style={{ fontSize: "14px", marginBottom: "16px", color: "#555" }}>
-                        Passez à l'abonnement payant pour un accès illimité — 35 €/mois, annulation à tout moment.
-                      </p>
-                      <button onClick={handleSubscribe} disabled={loading} style={{ ...STYLE.btn("primary"), opacity: loading ? 0.6 : 1 }}>
-                        {loading ? "Redirection..." : "S'abonner — 35 €/mois"}
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div style={STYLE.card}>
-              <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>Mon compte</h2>
-              <p style={{ fontSize: "14px" }}>Email : <strong>{user?.email}</strong></p>
-              <p style={{ fontSize: "14px", marginTop: "8px" }}>
-                Inscrit le : {user?.created_at ? new Date(user.created_at).toLocaleDateString("fr-FR") : "—"}
-              </p>
-              <button onClick={handleLogout} style={{ ...STYLE.btn("secondary"), marginTop: "24px" }}>
-                Se déconnecter
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+                        Passez C�������������Ё��兹Ё���ȁո�����́����������P��ԃ�
+�����̰����ձ�ѥ�����ѽ�Ё�����и(�������������������������(�������������������������ѽ����
+������������MՉ͍ɥ��􁑥ͅ����������������屔��쀸��MQe1��Ѹ���ɥ���䈤���������聱�����������؀�ā���(������������������������������������I���ɕ�ѥ�������耉L�������ȃ�P��ԃ�
+�����̉�(�������������������������ѽ��(��������������������𽑥��(��������������������(������������������(����������������(������������𽑥��((�������������؁��屔��MQe1���ɑ��(���������������ȁ��屔��쁙���M��耈�����������]�����耈��������ɝ��	��ѽ�耈���������5�������є���(�������������������屔��쁙���M��耈������������������ɽ�����͕������������ɽ������(�������������������屔��쁙���M��耈���������ɝ��Q��耈��������(����������������%�͍ɥЁ������͕����ɕ�ѕ�}�Ѐ����܁�є��͕ȹ�ɕ�ѕ�}�Ф�ѽ1������ѕM�ɥ�����ȵH���耋�P��(�����������������(�����������������ѽ����
+������������1��������屔��쀸��MQe1��Ѹ��͕������䈤����ɝ��Q��耈���������(����������������M����������ѕ�(�����������������ѽ��(������������𽑥��(����������𽑥��(����������(������𽑥��(����𽑥��(����)�(
