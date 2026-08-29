@@ -225,7 +225,7 @@ export default function Dashboard() {
 
   function _extractSeries(analysis, sheetName) {
     const { data, bestDate, bestVal, hasRealDates } = analysis;
-    const result = {}, rows = [];
+    const result = {};
     let idx = 0;
     for (const row of data) {
       const rawV = row[bestVal.ci];
