@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [history, setHistory] = useState(null); // null = pas encore charge
   const [historyLoading, setHistoryLoading] = useState(false);
   const [rgpdExporting, setRgpdExporting] = useState(false);
+  const [importedFiles, setImportedFiles] = useState([]); // liste des fichiers importés
   const [rgpdDeleting, setRgpdDeleting] = useState(false);
   const [rgpdStatus, setRgpdStatus] = useState(null);
   const [rgpdContactOpen, setRgpdContactOpen] = useState(false);
@@ -273,48 +274,77 @@ export default function Dashboard() {
     return { rows: best.rows, meta: { sheet: best.sn, mode: best.analysis.hasRealDates?"série temporelle":"bordereau (dates auto)", dateCol: best.analysis.bestDate.header||"auto", valueCol: best.analysis.bestVal.header, count: best.rows.length, sheets: results.length } };
   }
 
-  function handleFile(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const name = file.name.toLowerCase();
-    const isExcel = name.endsWith(".xlsx") || name.endsWith(".xls");
-    const isCsv   = name.endsWith(".csv");
-    if (!isExcel && !isCsv) {
-      setCsvError("❌ Format non supporté — utilisez .csv, .xlsx ou .xls");
+  async function handleFile(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    // Vérifier formats
+    const invalid = files.filter(f => {
+      const n = f.name.toLowerCase();
+      return !n.endsWith(".csv") && !n.endsWith(".xlsx") && !n.endsWith(".xls");
+    });
+    if (invalid.length > 0) {
+      setCsvError(`❌ Format non supporté : ${invalid.map(f=>f.name).join(", ")} — utilisez .csv, .xlsx ou .xls`);
       return;
     }
     setCsvError("");
-    const reader = new FileReader();
-    if (isExcel) {
+    setData(null);
+
+    // Parser chaque fichier
+    const readFile = (file) => new Promise((resolve, reject) => {
+      const name = file.name.toLowerCase();
+      const isExcel = name.endsWith(".xlsx") || name.endsWith(".xls");
+      const reader = new FileReader();
       reader.onload = ev => {
         try {
-          const {rows, meta} = smartParseExcel(ev.target.result);
-          setData(rows);
-          setResult(null);
-          setCsvError("");
-          // Afficher info sur l'extraction
-          if (meta.mode === "bordereau (dates auto)") {
-            setCsvError(`ℹ️ Mode bordereau détecté — ${meta.count} postes extraits depuis "${meta.sheet}" | Valeur: ${meta.valueCol} | Dates générées automatiquement`);
-          }
+          const result = isExcel
+            ? smartParseExcel(ev.target.result)
+            : smartParseCSV(ev.target.result);
+          resolve({ file: file.name, ...result });
         } catch(err) {
-          setCsvError(err.message);
-          setData(null);
+          reject(new Error(`${file.name} : ${err.message}`));
         }
       };
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.onload = ev => {
-        try {
-          const {rows, meta} = smartParseCSV(ev.target.result);
-          setData(rows);
-          setResult(null);
-          setCsvError("");
-        } catch(err) {
-          setCsvError(err.message);
-          setData(null);
+      reader.onerror = () => reject(new Error(`Erreur lecture ${file.name}`));
+      if (isExcel) reader.readAsArrayBuffer(file);
+      else reader.readAsText(file, "UTF-8");
+    });
+
+    try {
+      const results = await Promise.all(files.map(readFile));
+
+      // Fusionner toutes les séries en une seule
+      const merged = {};
+      for (const r of results) {
+        for (const {ds, y} of r.rows) {
+          merged[ds] = (merged[ds] || 0) + y;
         }
-      };
-      reader.readAsText(file, "UTF-8");
+      }
+      const allRows = Object.entries(merged)
+        .map(([ds, y]) => ({ds, y}))
+        .sort((a,b) => a.ds.localeCompare(b.ds));
+
+      if (allRows.length < 7) {
+        throw new Error(`❌ Seulement ${allRows.length} points de données après fusion (minimum 7).`);
+      }
+
+      setData(allRows);
+      setResult(null);
+      setImportedFiles(results.map(r => ({
+        name: r.file,
+        count: r.rows.length,
+        mode: r.meta.mode,
+        valueCol: r.meta.valueCol
+      })));
+
+      if (files.length > 1) {
+        setCsvError(`✅ ${files.length} fichiers fusionnés — ${allRows.length} points de données au total`);
+      } else if (results[0].meta.mode.includes("bordereau")) {
+        setCsvError(`ℹ️ Mode bordereau — ${allRows.length} postes extraits | Valeur: ${results[0].meta.valueCol}`);
+      }
+    } catch(err) {
+      setCsvError(err.message);
+      setData(null);
+      setImportedFiles([]);
     }
   }
 
@@ -444,7 +474,7 @@ export default function Dashboard() {
                   Aucune prévision pour l'instant
                 </h2>
                 <p style={{ fontSize: "14px", marginBottom: "24px" }}>
-                  Importez un CSV avec vos données historiques pour démarrer.
+                  Importez un ou plusieurs fichiers CSV/Excel avec vos données historiques.
                 </p>
                 <button
                   onClick={() => fileRef.current && fileRef.current.click()}
@@ -452,9 +482,9 @@ export default function Dashboard() {
                 >
                   Importer un fichier
                 </button>
-                <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} style={{ display: "none" }} />
+                <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} multiple style={{ display: "none" }} />
                 <div style={{ marginTop: "24px", fontSize: "12px", color: "#888", textAlign: "left", maxWidth: "400px", margin: "24px auto 0" }}>
-                  <strong>Formats acceptés : .csv · .xlsx · .xls</strong><br />
+                  <strong>Formats acceptés : .csv · .xlsx · .xls · plusieurs fichiers simultanément</strong><br />
                   <code style={{ background: "#f5f5f5", padding: "8px", display: "block", marginTop: "8px", fontSize: "11px" }}>
                     ds,y<br />
                     2024-01-01,120<br />
@@ -491,12 +521,16 @@ export default function Dashboard() {
                 <div>
                   <label style={STYLE.label}>Fichier CSV</label>
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} style={{ display: "none" }} />
+                    <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} multiple style={{ display: "none" }} />
                     <button onClick={() => fileRef.current.click()} style={STYLE.btn("secondary")}>
                       {data ? "Changer le fichier" : "Importer un fichier"}
                     </button>
                     <span style={{ fontSize: "13px", color: data ? "#006600" : "#555" }}>
-                      {data ? `✓ ${data.length} lignes importées` : "Aucun fichier"}
+                      {data
+  ? importedFiles.length > 1
+    ? `✓ ${importedFiles.length} fichiers — ${data.length} points fusionnés`
+    : `✓ ${data.length} lignes importées`
+  : "Aucun fichier"}
                     </span>
                   </div>
                   {csvError && <p style={{ color: "#cc0000", fontSize: "13px", marginTop: "8px" }}>{csvError}</p>}
