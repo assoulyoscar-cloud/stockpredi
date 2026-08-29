@@ -26,11 +26,16 @@ export default function Dashboard() {
   const [data, setData] = useState(null); // null = no CSV loaded yet (empty state)
   const [periods, setPeriods] = useState(30);
   const [csvError, setCsvError] = useState("");
-
   const [subStatus, setSubStatus] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
   const [history, setHistory] = useState(null); // null = pas encore charge
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [rgpdExporting, setRgpdExporting] = useState(false);
+  const [rgpdDeleting, setRgpdDeleting] = useState(false);
+  const [rgpdStatus, setRgpdStatus] = useState(null);
+  const [rgpdContactOpen, setRgpdContactOpen] = useState(false);
+  const [rgpdContactType, setRgpdContactType] = useState("question");
+  const [rgpdContactMsg, setRgpdContactMsg] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -59,6 +64,8 @@ export default function Dashboard() {
     }
   }, [tab, history, user]);
 
+  useEffect(() => { if (tab === "account" && rgpdStatus === null && user) { backendClient.rgpdStatus().then(setRgpdStatus).catch(() => {}); } }, [tab, user, rgpdStatus]);
+
   async function deletePrediction(id) {
     const { error: delErr } = await supabase.from("predictions").delete().eq("id", id);
     if (!delErr) setHistory(h => (h || []).filter(r => r.id !== id));
@@ -72,6 +79,24 @@ export default function Dashboard() {
     setTab("forecast");
   }
 
+  async function handleRgpdExport() {
+    setRgpdExporting(true);
+    try { await backendClient.rgpdExport(); setRgpdStatus(s=>({...s,last_export:new Date().toISOString()})); alert("Export RGPD envoye par email !"); }
+    catch(err) { alert("Erreur : "+err.message); }
+    finally { setRgpdExporting(false); }
+  }
+  async function handleRgpdDelete() {
+    if (!window.confirm("Supprimer toutes vos previsions ? Action irreversible.")) return;
+    setRgpdDeleting(true);
+    try { const res=await backendClient.rgpdDelete(); setHistory([]); alert(res.deleted_predictions+" prevision(s) supprimee(s)."); }
+    catch(err) { alert("Erreur : "+err.message); }
+    finally { setRgpdDeleting(false); }
+  }
+  async function handleRgpdContact() {
+    if (!rgpdContactMsg.trim()) return;
+    try { await backendClient.rgpdContact({email:user?.email,type:rgpdContactType,message:rgpdContactMsg}); setRgpdContactOpen(false); setRgpdContactMsg(""); alert("Demande envoyee. Reponse sous 30 jours."); }
+    catch(err) { alert("Erreur : "+err.message); }
+  }
   async function handleLogout() {
     await supabase.auth.signOut();
     navigate("/");
@@ -312,7 +337,7 @@ export default function Dashboard() {
                   onClick={() => fileRef.current && fileRef.current.click()}
                   style={STYLE.btn("primary")}
                 >
-                  Importer CSV ou Excel
+                  Importer un fichier
                 </button>
                 <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} style={{ display: "none" }} />
                 <div style={{ marginTop: "24px", fontSize: "12px", color: "#888", textAlign: "left", maxWidth: "400px", margin: "24px auto 0" }}>
@@ -355,7 +380,7 @@ export default function Dashboard() {
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} style={{ display: "none" }} />
                     <button onClick={() => fileRef.current.click()} style={STYLE.btn("secondary")}>
-                      {data ? "Changer le fichier" : "Importer CSV / Excel"}
+                      {data ? "Changer le fichier" : "Importer un fichier"}
                     </button>
                     <span style={{ fontSize: "13px", color: data ? "#006600" : "#555" }}>
                       {data ? `✓ ${data.length} lignes importées` : "Aucun fichier"}
@@ -573,6 +598,45 @@ export default function Dashboard() {
               <button onClick={handleLogout} style={{ ...STYLE.btn("secondary"), marginTop: "24px" }}>
                 Se déconnecter
               </button>
+            </div>
+            <div style={{...STYLE.card,marginTop:"24px"}}>
+              <h2 style={{fontSize:"16px",fontWeight:"700",marginBottom:"16px"}}>Confidentialite et RGPD</h2>
+              <p style={{fontSize:"12px",color:"#555",marginBottom:"16px"}}>Conformement au RGPD, vous disposez des droits suivants.</p>
+              <div style={{fontSize:"12px",marginBottom:"16px",lineHeight:"1.8"}}>
+                <div>Art. 15 - Droit d'acces a vos donnees</div>
+                <div>Art. 16 - Droit de rectification</div>
+                <div>Art. 17 - Droit a l'effacement</div>
+                <div>Art. 20 - Droit a la portabilite</div>
+                <div>Art. 21 - Droit d'opposition</div>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+                <div>
+                  <button onClick={handleRgpdExport} disabled={rgpdExporting} style={{...STYLE.btn("primary"),fontSize:"13px",opacity:rgpdExporting?0.6:1}}>
+                    {rgpdExporting?"Generation...":"Telecharger mes donnees (PDF par email)"}
+                  </button>
+                  {rgpdStatus?.last_export&&<p style={{fontSize:"11px",color:"#555",marginTop:"6px"}}>Dernier export : {new Date(rgpdStatus.last_export).toLocaleDateString("fr-FR")}</p>}
+                </div>
+                <button onClick={handleRgpdDelete} disabled={rgpdDeleting} style={{...STYLE.btn("secondary"),color:"#cc0000",borderColor:"#cc0000",fontSize:"13px"}}>
+                  {rgpdDeleting?"Suppression...":"Supprimer mes previsions"}
+                </button>
+                <button onClick={()=>setRgpdContactOpen(o=>!o)} style={{...STYLE.btn("secondary"),fontSize:"13px"}}>
+                  Contacter le DPO
+                </button>
+                {rgpdContactOpen&&(<div style={{border:"1px solid #000",padding:"16px",marginTop:"4px"}}>
+                  <select style={{...STYLE.input,marginBottom:"8px"}} value={rgpdContactType} onChange={e=>setRgpdContactType(e.target.value)}>
+                    <option value="question">Question generale</option>
+                    <option value="rectification">Rectification de donnees</option>
+                    <option value="opposition">Opposition au traitement</option>
+                    <option value="suppression">Suppression de compte</option>
+                  </select>
+                  <textarea style={{...STYLE.input,height:"80px",resize:"vertical"}} placeholder="Votre message..." value={rgpdContactMsg} onChange={e=>setRgpdContactMsg(e.target.value)}/>
+                  <button onClick={handleRgpdContact} style={{...STYLE.btn("primary"),marginTop:"8px",fontSize:"13px"}}>Envoyer</button>
+                </div>)}
+              </div>
+              <div style={{marginTop:"16px",fontSize:"12px",borderTop:"1px solid #eee",paddingTop:"12px"}}>
+                <a href="/politique-confidentialite" style={{color:"#000",marginRight:"16px"}}>Politique de confidentialite</a>
+                <a href="/mentions-legales" style={{color:"#000"}}>Mentions legales</a>
+              </div>
             </div>
           </div>
         )}
