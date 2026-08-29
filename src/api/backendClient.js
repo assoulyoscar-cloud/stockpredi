@@ -22,7 +22,7 @@ export const backendClient = {
   subscriptionStatus: () => apiFetch("/api/stripe/status"),
   createSubscription: () => apiFetch("/api/stripe/create-subscription", { method: "POST" }),
   recommendations: (data, productName, periods) =>
-    apiFetch("/api/recommendations", {
+    apiFetch("/api/predictions/recommendations", {
       method: "POST",
       body: JSON.stringify({ data, product_name: productName, periods }),
     }),
