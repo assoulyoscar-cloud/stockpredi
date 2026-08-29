@@ -514,7 +514,7 @@ export default function Dashboard() {
                             <td style={{ padding: "8px", textAlign: "right" }}>
                               {fd.forecast?.accuracy_score != null ? `${(fd.forecast.accuracy_score * 100).toFixed(0)}%` : "—"}
                             </td>
-                          <td style={{ padding: "8px", textAlign: "right", whiteSpace: "nowrap" }}>
+                            <td style={{ padding: "8px", textAlign: "right", whiteSpace: "nowrap" }}>
                               <button onClick={() => viewPrediction(row)} style={{ ...STYLE.btn("secondary"), padding: "4px 10px", fontSize: "12px", marginRight: "8px" }}>
                                 Voir
                               </button>
@@ -538,7 +538,7 @@ export default function Dashboard() {
           <div>
             <div style={STYLE.card}>
               <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>Mon abonnement</h2>
-              {subLomding ? (
+              {subLoading ? (
                 <p style={{ fontSize: "14px", color: "#888" }}>Chargement...</p>
               ) : (
                 <>
@@ -552,8 +552,30 @@ export default function Dashboard() {
                   ) : (
                     <div style={{ marginTop: "16px" }}>
                       <p style={{ fontSize: "14px", marginBottom: "16px", color: "#555" }}>
-                        Passez C�������������Ё��兹Ё���ȁո�����́����������P��ԃ�
-�����̰����ձ�ѥ�����ѽ�Ё�����и(�������������������������(�������������������������ѽ����
-������������MՉ͍ɥ��􁑥ͅ����������������屔��쀸��MQe1��Ѹ���ɥ���䈤���������聱�����������؀�ā���(������������������������������������I���ɕ�ѥ�������耉L�������ȃ�P��ԃ�
-�����̉�(�������������������������ѽ��(��������������������𽑥��(��������������������(������������������(����������������(������������𽑥��((�������������؁��屔��MQe1���ɑ��(���������������ȁ��屔��쁙���M��耈�����������]�����耈��������ɝ��	��ѽ�耈���������5�������є���(�������������������屔��쁙���M��耈������������������ɽ�����͕������������ɽ������(�������������������屔��쁙���M��耈���������ɝ��Q��耈��������(����������������%�͍ɥЁ������͕����ɕ�ѕ�}�Ѐ����܁�є��͕ȹ�ɕ�ѕ�}�Ф�ѽ1������ѕM�ɥ�����ȵH���耋�P��(�����������������(�����������������ѽ����
-������������1��������屔��쀸��MQe1��Ѹ��͕������䈤����ɝ��Q��耈���������(����������������M����������ѕ�(�����������������ѽ��(������������𽑥��(����������𽑥��(����������(������𽑥��(����𽑥��(����)�(
+                        Passez à l'abonnement payant pour un accès illimité — 35 €/mois, annulation à tout moment.
+                      </p>
+                      <button onClick={handleSubscribe} disabled={loading} style={{ ...STYLE.btn("primary"), opacity: loading ? 0.6 : 1 }}>
+                        {loading ? "Redirection..." : "S'abonner — 35 €/mois"}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div style={STYLE.card}>
+              <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>Mon compte</h2>
+              <p style={{ fontSize: "14px" }}>Email : <strong>{user?.email}</strong></p>
+              <p style={{ fontSize: "14px", marginTop: "8px" }}>
+                Inscrit le : {user?.created_at ? new Date(user.created_at).toLocaleDateString("fr-FR") : "—"}
+              </p>
+              <button onClick={handleLogout} style={{ ...STYLE.btn("secondary"), marginTop: "24px" }}>
+                Se déconnecter
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
