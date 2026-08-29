@@ -336,10 +336,11 @@ export default function Dashboard() {
         valueCol: r.meta.valueCol
       })));
 
+      // Messages d'info (ne bloquent pas le bouton)
       if (files.length > 1) {
-        setCsvError(`✅ ${files.length} fichiers fusionnés — ${allRows.length} points de données au total`);
+        setCsvError(""); // pas d'erreur
       } else if (results[0].meta.mode.includes("bordereau")) {
-        setCsvError(`ℹ️ Mode bordereau — ${allRows.length} postes extraits | Valeur: ${results[0].meta.valueCol}`);
+        setCsvError(""); // pas d'erreur
       }
     } catch(err) {
       setCsvError(err.message);
