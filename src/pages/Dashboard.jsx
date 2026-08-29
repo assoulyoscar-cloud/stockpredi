@@ -349,6 +349,120 @@ export default function Dashboard() {
     }
   }
 
+  async function generatePDF() {
+    // Import dynamique jsPDF (CDN)
+    const { jsPDF } = await import("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const now = new Date().toLocaleDateString("fr-FR", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+    const W = 210, M = 15;
+
+    // En-tête
+    doc.setFillColor(0,0,0);
+    doc.rect(0, 0, W, 22, "F");
+    doc.setTextColor(255,255,255);
+    doc.setFont("courier","bold");
+    doc.setFontSize(16);
+    doc.text("STOCKPREDI", M, 10);
+    doc.setFontSize(9);
+    doc.setFont("courier","normal");
+    doc.text("Rapport de prevision IA", M, 16);
+    doc.text(now, W - M, 16, {align:"right"});
+
+    // Produit + infos
+    doc.setTextColor(0,0,0);
+    doc.setFont("courier","bold");
+    doc.setFontSize(14);
+    doc.text(productName || "Mon produit", M, 32);
+    doc.setFont("courier","normal");
+    doc.setFontSize(9);
+    doc.setTextColor(80,80,80);
+    doc.text(`Tendance : ${result.trend || "-"}`, M, 40);
+    doc.text(`Precision : ${((result.forecast?.accuracy_score||0)*100).toFixed(0)}%`, M+60, 40);
+    doc.text(`Modele : ${result.forecast?.model || "-"}`, M+110, 40);
+    doc.text(`Horizon : ${periods} jours`, M, 46);
+    doc.text(`Points historique : ${result.forecast?.data_points ?? (data?data.length:"-")}`, M+60, 46);
+
+    // Ligne séparatrice
+    doc.setDrawColor(0,0,0);
+    doc.line(M, 50, W-M, 50);
+
+    let y = 58;
+
+    // Recommandations IA
+    if(result.recommendations?.length) {
+      doc.setFont("courier","bold"); doc.setFontSize(11); doc.setTextColor(0,0,0);
+      doc.text("Recommandations IA", M, y); y += 7;
+      doc.setFont("courier","normal"); doc.setFontSize(8);
+      for(const r of result.recommendations) {
+        const priorityColor = r.priority==="CRITIQUE"?[180,0,0]:r.priority==="ATTENTION"?[180,100,0]:[0,100,0];
+        doc.setTextColor(...priorityColor);
+        const line = `[${r.priority}] ${r.action}${r.detail?" — "+r.detail:""}`;
+        const split = doc.splitTextToSize(line, W-M*2);
+        doc.text(split, M, y);
+        y += split.length * 5 + 2;
+        if(y > 260) { doc.addPage(); y = 20; }
+      }
+      doc.setTextColor(0,0,0);
+      y += 4;
+    }
+
+    // Alertes
+    if(result.alerts?.length) {
+      doc.setFont("courier","bold"); doc.setFontSize(11);
+      doc.text("Alertes detectees", M, y); y += 7;
+      doc.setFont("courier","normal"); doc.setFontSize(8);
+      for(const a of result.alerts) {
+        const isRupture = a.type==="stockout";
+        doc.setTextColor(isRupture?180:180, isRupture?0:100, 0);
+        doc.text(`${isRupture?"RUPTURE":"SURPLUS"} le ${a.date} — ${a.action}`, M, y);
+        y += 6;
+        if(y > 260) { doc.addPage(); y = 20; }
+      }
+      doc.setTextColor(0,0,0);
+      y += 4;
+    }
+
+    // Tableau prévisions
+    doc.setFont("courier","bold"); doc.setFontSize(11); doc.setTextColor(0,0,0);
+    doc.text(`Previsions ${periods} jours`, M, y); y += 8;
+
+    // En-tête tableau
+    const colW = [45,40,40,40];
+    const cols = ["Date","Prevision","Min","Max"];
+    doc.setFillColor(0,0,0);
+    doc.rect(M, y-5, W-M*2, 7, "F");
+    doc.setTextColor(255,255,255);
+    doc.setFont("courier","bold"); doc.setFontSize(8);
+    let cx = M+2;
+    cols.forEach((c,i) => { doc.text(c, cx, y); cx += colW[i]; });
+    y += 4;
+
+    // Lignes données
+    doc.setFont("courier","normal"); doc.setTextColor(0,0,0);
+    const preds = result.forecast?.predictions || [];
+    preds.forEach((p, idx) => {
+      if(y > 270) { doc.addPage(); y = 20; }
+      if(idx%2===0) { doc.setFillColor(245,245,245); doc.rect(M, y-4, W-M*2, 6, "F"); }
+      doc.setFontSize(8);
+      cx = M+2;
+      [p.date, String(p.forecast), String(p.confidence_lower), String(p.confidence_upper)].forEach((v,i) => {
+        doc.text(v, cx, y); cx += colW[i];
+      });
+      y += 6;
+    });
+
+    y += 8;
+    // Footer
+    doc.setDrawColor(0,0,0); doc.line(M, y, W-M, y); y += 5;
+    doc.setFontSize(7); doc.setTextColor(120,120,120);
+    doc.text("StockPredi — Previsions IA pour PME francaises — stockpredi.fr", M, y);
+    doc.text(`Page 1/${doc.getNumberOfPages()}`, W-M, y, {align:"right"});
+
+    // Télécharger
+    const filename = `StockPredi_${(productName||"prevision").replace(/\s+/g,"-")}_${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(filename);
+  }
+
   async function runForecast() {
     setError("");
     setResult(null);
@@ -632,6 +746,12 @@ export default function Dashboard() {
                         + {(result.forecast.predictions.length - 10)} lignes supplémentaires
                       </p>
                     )}
+                    <button
+                      onClick={generatePDF}
+                      style={{ ...STYLE.btn("secondary"), marginTop: "16px", fontSize: "13px" }}
+                    >
+                      Télécharger le rapport PDF
+                    </button>
                   </div>
                 </div>
               </div>
