@@ -349,118 +349,87 @@ export default function Dashboard() {
     }
   }
 
-  async function generatePDF() {
-    // Import dynamique jsPDF (CDN)
-    const { jsPDF } = await import("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  function generatePDF() {
     const now = new Date().toLocaleDateString("fr-FR", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
-    const W = 210, M = 15;
-
-    // En-tête
-    doc.setFillColor(0,0,0);
-    doc.rect(0, 0, W, 22, "F");
-    doc.setTextColor(255,255,255);
-    doc.setFont("courier","bold");
-    doc.setFontSize(16);
-    doc.text("STOCKPREDI", M, 10);
-    doc.setFontSize(9);
-    doc.setFont("courier","normal");
-    doc.text("Rapport de prevision IA", M, 16);
-    doc.text(now, W - M, 16, {align:"right"});
-
-    // Produit + infos
-    doc.setTextColor(0,0,0);
-    doc.setFont("courier","bold");
-    doc.setFontSize(14);
-    doc.text(productName || "Mon produit", M, 32);
-    doc.setFont("courier","normal");
-    doc.setFontSize(9);
-    doc.setTextColor(80,80,80);
-    doc.text(`Tendance : ${result.trend || "-"}`, M, 40);
-    doc.text(`Precision : ${((result.forecast?.accuracy_score||0)*100).toFixed(0)}%`, M+60, 40);
-    doc.text(`Modele : ${result.forecast?.model || "-"}`, M+110, 40);
-    doc.text(`Horizon : ${periods} jours`, M, 46);
-    doc.text(`Points historique : ${result.forecast?.data_points ?? (data?data.length:"-")}`, M+60, 46);
-
-    // Ligne séparatrice
-    doc.setDrawColor(0,0,0);
-    doc.line(M, 50, W-M, 50);
-
-    let y = 58;
-
-    // Recommandations IA
-    if(result.recommendations?.length) {
-      doc.setFont("courier","bold"); doc.setFontSize(11); doc.setTextColor(0,0,0);
-      doc.text("Recommandations IA", M, y); y += 7;
-      doc.setFont("courier","normal"); doc.setFontSize(8);
-      for(const r of result.recommendations) {
-        const priorityColor = r.priority==="CRITIQUE"?[180,0,0]:r.priority==="ATTENTION"?[180,100,0]:[0,100,0];
-        doc.setTextColor(...priorityColor);
-        const line = `[${r.priority}] ${r.action}${r.detail?" — "+r.detail:""}`;
-        const split = doc.splitTextToSize(line, W-M*2);
-        doc.text(split, M, y);
-        y += split.length * 5 + 2;
-        if(y > 260) { doc.addPage(); y = 20; }
-      }
-      doc.setTextColor(0,0,0);
-      y += 4;
-    }
-
-    // Alertes
-    if(result.alerts?.length) {
-      doc.setFont("courier","bold"); doc.setFontSize(11);
-      doc.text("Alertes detectees", M, y); y += 7;
-      doc.setFont("courier","normal"); doc.setFontSize(8);
-      for(const a of result.alerts) {
-        const isRupture = a.type==="stockout";
-        doc.setTextColor(isRupture?180:180, isRupture?0:100, 0);
-        doc.text(`${isRupture?"RUPTURE":"SURPLUS"} le ${a.date} — ${a.action}`, M, y);
-        y += 6;
-        if(y > 260) { doc.addPage(); y = 20; }
-      }
-      doc.setTextColor(0,0,0);
-      y += 4;
-    }
-
-    // Tableau prévisions
-    doc.setFont("courier","bold"); doc.setFontSize(11); doc.setTextColor(0,0,0);
-    doc.text(`Previsions ${periods} jours`, M, y); y += 8;
-
-    // En-tête tableau
-    const colW = [45,40,40,40];
-    const cols = ["Date","Prevision","Min","Max"];
-    doc.setFillColor(0,0,0);
-    doc.rect(M, y-5, W-M*2, 7, "F");
-    doc.setTextColor(255,255,255);
-    doc.setFont("courier","bold"); doc.setFontSize(8);
-    let cx = M+2;
-    cols.forEach((c,i) => { doc.text(c, cx, y); cx += colW[i]; });
-    y += 4;
-
-    // Lignes données
-    doc.setFont("courier","normal"); doc.setTextColor(0,0,0);
     const preds = result.forecast?.predictions || [];
-    preds.forEach((p, idx) => {
-      if(y > 270) { doc.addPage(); y = 20; }
-      if(idx%2===0) { doc.setFillColor(245,245,245); doc.rect(M, y-4, W-M*2, 6, "F"); }
-      doc.setFontSize(8);
-      cx = M+2;
-      [p.date, String(p.forecast), String(p.confidence_lower), String(p.confidence_upper)].forEach((v,i) => {
-        doc.text(v, cx, y); cx += colW[i];
-      });
-      y += 6;
-    });
+    const recs = result.recommendations || [];
+    const alerts = result.alerts || [];
+    const accuracy = ((result.forecast?.accuracy_score||0)*100).toFixed(0);
 
-    y += 8;
-    // Footer
-    doc.setDrawColor(0,0,0); doc.line(M, y, W-M, y); y += 5;
-    doc.setFontSize(7); doc.setTextColor(120,120,120);
-    doc.text("StockPredi — Previsions IA pour PME francaises — stockpredi.fr", M, y);
-    doc.text(`Page 1/${doc.getNumberOfPages()}`, W-M, y, {align:"right"});
+    const tableRows = preds.map((p,i) => `
+      <tr style="background:${i%2===0?"#f9f9f9":"#fff"}">
+        <td>${p.date}</td>
+        <td style="font-weight:700;text-align:right">${p.forecast}</td>
+        <td style="color:#666;text-align:right">${p.confidence_lower}</td>
+        <td style="color:#666;text-align:right">${p.confidence_upper}</td>
+      </tr>`).join("");
 
-    // Télécharger
-    const filename = `StockPredi_${(productName||"prevision").replace(/\s+/g,"-")}_${new Date().toISOString().slice(0,10)}.pdf`;
-    doc.save(filename);
+    const recRows = recs.map(r => {
+      const col = r.priority==="CRITIQUE"?"#cc0000":r.priority==="ATTENTION"?"#cc6600":"#006600";
+      return `<div style="padding:8px;margin-bottom:6px;border-left:3px solid ${col};background:${r.priority==="CRITIQUE"?"#fff0f0":r.priority==="ATTENTION"?"#fffbe6":"#f0fff0"}">
+        <strong style="color:${col}">[${r.priority}]</strong> ${r.action}${r.detail?` <span style="color:#555">— ${r.detail}</span>`:""}
+      </div>`;
+    }).join("");
+
+    const alertRows = alerts.map(a => {
+      const isR = a.type==="stockout";
+      return `<div style="padding:8px;margin-bottom:6px;border-left:3px solid ${isR?"#cc0000":"#cc6600"};background:${isR?"#fff0f0":"#fffbe6"}">
+        <strong>${isR?"RUPTURE":"SURPLUS"}</strong> le ${a.date} — ${a.action}
+      </div>`;
+    }).join("");
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>StockPredi — ${productName}</title>
+    <style>
+      body{font-family:"Courier New",monospace;color:#000;margin:0;padding:0;font-size:12px}
+      .header{background:#000;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+      .header h1{margin:0;font-size:20px;letter-spacing:2px}
+      .header small{font-size:10px;opacity:.8}
+      .content{padding:24px}
+      .meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;padding:16px;border:1px solid #000}
+      .meta div{text-align:center}
+      .meta .val{font-size:18px;font-weight:700}
+      .meta .lbl{font-size:10px;color:#555;margin-top:4px}
+      h2{font-size:14px;border-bottom:2px solid #000;padding-bottom:4px;margin-top:24px}
+      table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+      th{background:#000;color:#fff;padding:6px 8px;text-align:left}
+      th:not(:first-child){text-align:right}
+      td{padding:5px 8px;border-bottom:1px solid #eee}
+      td:not(:first-child){text-align:right}
+      .footer{margin-top:32px;padding-top:8px;border-top:1px solid #ccc;font-size:9px;color:#888;display:flex;justify-content:space-between}
+      @media print{.no-print{display:none}}
+    </style></head><body>
+    <div class="header">
+      <div><h1>STOCKPREDI</h1><small>Rapport de prévision IA</small></div>
+      <div style="text-align:right"><div style="font-size:14px;font-weight:700">${productName||"Mon produit"}</div><small>${now}</small></div>
+    </div>
+    <div class="content">
+      <div class="meta">
+        <div><div class="val">${result.trend||"-"}</div><div class="lbl">Tendance</div></div>
+        <div><div class="val">${accuracy}%</div><div class="lbl">Précision modèle</div></div>
+        <div><div class="val">${periods}j</div><div class="lbl">Horizon prévision</div></div>
+      </div>
+      <div style="font-size:10px;color:#555;margin-bottom:16px">
+        Modèle : ${result.forecast?.model||"-"} · ${result.forecast?.data_points??(data?data.length:"-")} points d'historique
+      </div>
+      ${recs.length?`<h2>Recommandations IA</h2>${recRows}`:""}
+      ${alerts.length?`<h2>Alertes détectées</h2>${alertRows}`:""}
+      <h2>Prévisions ${periods} jours</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Prévision</th><th>Min</th><th>Max</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+      <div class="footer">
+        <span>StockPredi — Prévisions IA pour PME françaises — stockpredi.fr</span>
+        <span>Généré le ${now}</span>
+      </div>
+    </div>
+    </body></html>`;
+
+    const w = window.open("","_blank","width=900,height=700");
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => w.print(), 500);
   }
 
   async function runForecast() {
