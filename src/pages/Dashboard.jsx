@@ -400,7 +400,10 @@ export default function Dashboard() {
       @media print{.no-print{display:none}}
     </style></head><body>
     <div class="header">
-      <div><h1>STOCKPREDI</h1><small>Rapport de prévision IA</small></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <img src="https://stockpredi.vercel.app/logoSTOCKPREDI.png" alt="StockPredi" style="height:36px;filter:invert(1)" onerror="this.style.display='none'"/>
+        <div><h1>STOCKPREDI®</h1><small>Rapport de prévision IA — Document confidentiel</small></div>
+      </div>
       <div style="text-align:right"><div style="font-size:14px;font-weight:700">${productName||"Mon produit"}</div><small>${now}</small></div>
     </div>
     <div class="content">
@@ -420,8 +423,18 @@ export default function Dashboard() {
         <tbody>${tableRows}</tbody>
       </table>
       <div class="footer">
-        <span>StockPredi — Prévisions IA pour PME françaises — stockpredi.fr</span>
-        <span>Généré le ${now}</span>
+        <div>
+          <div style="font-weight:700;font-size:11px;letter-spacing:1px">STOCKPREDI®</div>
+          <div>Marque déposée — Tous droits réservés © ${new Date().getFullYear()}</div>
+          <div>SIRET : En cours d'enregistrement — APE 6201Z — APE 6201Z</div>
+          <div>stockpredi.fr — support@stockpredi.fr</div>
+          <div style="margin-top:4px;font-style:italic;color:#555">Document généré automatiquement par StockPredi. Toute reproduction ou diffusion interdite sans autorisation écrite.</div>
+          <div style="margin-top:2px;color:#888">Hébergement UE — Données protégées RGPD — Paiements sécurisés Stripe (PCI DSS)</div>
+        </div>
+        <div style="text-align:right">
+          <div>Généré le ${now}</div>
+          <div style="margin-top:4px">Rapport confidentiel — Usage interne uniquement</div>
+        </div>
       </div>
     </div>
     </body></html>`;
