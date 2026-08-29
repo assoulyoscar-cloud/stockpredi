@@ -116,8 +116,8 @@ export default function Dashboard() {
     const n = parseFloat(s);
     if (!isNaN(n) && n > 30000 && n < 70000) return true;
     if (/^\d{4}-\d{2}-\d{2}/.test(s)) return true;
-    if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}/.test(s)) return true;
-    if (/^\d{1,2}[\/-]\d{4}$/.test(s)) return true;
+    if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}/.test(s)) return true;
+    if (/^\d{1,2}[-/]\d{4}$/.test(s)) return true;
     const sl = s.toLowerCase();
     return Object.keys(MONTH_MAP).some(m => sl.includes(m));
   }
@@ -138,9 +138,9 @@ export default function Dashboard() {
       return new Date(Math.round((n-25569)*86400*1000)).toISOString().slice(0,10);
     }
     if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
-    const fr = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+    const fr = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
     if (fr) return `${fr[3]}-${fr[2].padStart(2,"0")}-${fr[1].padStart(2,"0")}`;
-    const mmy = s.match(/^(\d{1,2})[\/-](\d{4})$/);
+    const mmy = s.match(/^(\d{1,2})[-/](\d{4})$/);
     if (mmy) return `${mmy[2]}-${mmy[1].padStart(2,"0")}-01`;
     const sl = s.toLowerCase();
     for (const [k,idx2] of Object.entries(MONTH_MAP)) {
