@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null); // null = no CSV loaded yet (empty state)
   const [periods, setPeriods] = useState(30);
   const [csvError, setCsvError] = useState("");
+
   const [subStatus, setSubStatus] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
   const [history, setHistory] = useState(null); // null = pas encore charge
