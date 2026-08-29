@@ -11,7 +11,6 @@ const SAMPLE_DATA = [
   {ds:"2024-03-08",y:165},{ds:"2024-03-15",y:180},{ds:"2024-03-22",y:174},
 ];
 
-const REQUIRED_COLS = ["ds", "y"];
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -120,7 +119,7 @@ export default function Dashboard() {
     // Format ISO direct
     if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
     // FR dd/mm/yyyy ou dd-mm-yyyy
-    const fr = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+    const fr = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
     if (fr) return `${fr[3]}-${String(fr[2]).padStart(2,"0")}-${String(fr[1]).padStart(2,"0")}`;
     // US mm/dd/yyyy
     const us = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
