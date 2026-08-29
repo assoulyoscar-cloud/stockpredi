@@ -101,65 +101,176 @@ export default function Dashboard() {
     navigate("/");
   }
 
-  // Correspondances colonnes flexibles
-  const COL_ALIASES = {
-    ds: ["ds", "date", "Date", "DATE", "jour", "Jour", "JOUR", "Jour_livraison", "periode", "Periode", "PERIODE", "mois", "Mois", "MOIS", "semaine", "Semaine", "SEMAINE"],
-    y:  ["y", "Y", "qty", "Qty", "QTY", "quantite", "Quantite", "QUANTITE", "quantity", "Quantity",
-         "ventes", "Ventes", "VENTES", "stock", "Stock", "STOCK", "valeur", "Valeur", "VALEUR",
-         "montant", "Montant", "MONTANT", "ca", "CA", "chiffre"]
-  };
+  // ═══════════════════════════════════════════════════
+  // SMART PARSER — Lit tout Excel/CSV automatiquement
+  // ═══════════════════════════════════════════════════
 
-  function findCol(headers, field) {
-    return headers.findIndex(h => COL_ALIASES[field].includes(h.trim()));
+  const DATE_KW = ["date","ds","jour","mois","semaine","période","periode","month","week","time","timestamp","année","annee","year"];
+  const VAL_KW  = ["y","qty","quantite","quantity","ventes","stock","valeur","montant","total","ca","chiffre","prix","amount","revenue","sales","volume","count","nombre"];
+  const MONTH_MAP = {jan:0,fev:1,feb:1,mar:2,avr:3,apr:3,mai:4,may:4,jui:5,jun:5,jul:6,aou:7,aug:7,sep:8,oct:9,nov:10,dec:11};
+
+  function _isDateVal(v) {
+    if (v === null || v === undefined || v === "") return false;
+    const s = String(v).trim();
+    const n = parseFloat(s);
+    if (!isNaN(n) && n > 30000 && n < 70000) return true;
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return true;
+    if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}/.test(s)) return true;
+    if (/^\d{1,2}[\/-]\d{4}$/.test(s)) return true;
+    const sl = s.toLowerCase();
+    return Object.keys(MONTH_MAP).some(m => sl.includes(m));
   }
 
-  function normalizeDate(raw) {
-    if (!raw) return null;
-    const s = String(raw).trim();
-    // Format ISO direct
-    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
-    // FR dd/mm/yyyy ou dd-mm-yyyy
-    const fr = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
-    if (fr) return `${fr[3]}-${String(fr[2]).padStart(2,"0")}-${String(fr[1]).padStart(2,"0")}`;
-    // US mm/dd/yyyy
-    const us = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    if (us) {
-      const m = parseInt(us[1]), d = parseInt(us[2]);
-      if (m > 12) return `${us[3]}-${String(d).padStart(2,"0")}-${String(m).padStart(2,"0")}`;
-      return `${us[3]}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-    }
-    // Numéro série Excel (nombre de jours depuis 1900-01-01)
+  function _isNumVal(v) {
+    if (v === null || v === undefined || v === "") return false;
+    if (typeof v === "number") return !isNaN(v);
+    const s = String(v).replace(/\s/g,"").replace(",",".");
+    return !isNaN(parseFloat(s)) && /^-?[\d.,]+$/.test(s.trim());
+  }
+
+  function _toDate(v, idx, sheetName) {
+    if (v === null || v === undefined) return _seqDate(idx, sheetName);
+    if (typeof v === "object" && v instanceof Date) return v.toISOString().slice(0,10);
+    const s = String(v).trim();
     const n = parseFloat(s);
-    if (!isNaN(n) && n > 1000 && n < 100000) {
-      const d = new Date(Math.round((n - 25569) * 86400 * 1000));
-      return d.toISOString().slice(0, 10);
+    if (!isNaN(n) && n > 30000 && n < 70000) {
+      return new Date(Math.round((n-25569)*86400*1000)).toISOString().slice(0,10);
+    }
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+    const fr = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+    if (fr) return `${fr[3]}-${fr[2].padStart(2,"0")}-${fr[1].padStart(2,"0")}`;
+    const mmy = s.match(/^(\d{1,2})[\/-](\d{4})$/);
+    if (mmy) return `${mmy[2]}-${mmy[1].padStart(2,"0")}-01`;
+    const sl = s.toLowerCase();
+    for (const [k,idx2] of Object.entries(MONTH_MAP)) {
+      if (sl.includes(k)) {
+        const ym = sl.match(/20\d{2}/); const yr = ym ? ym[0] : "2024";
+        return `${yr}-${String(idx2+1).padStart(2,"0")}-01`;
+      }
+    }
+    return _seqDate(idx, sheetName);
+  }
+
+  function _seqDate(idx, sheetName) {
+    const base = _sheetDate(sheetName) || new Date("2020-01-01");
+    const d = new Date(base); d.setDate(d.getDate() + idx * 7);
+    return d.toISOString().slice(0,10);
+  }
+
+  function _sheetDate(name) {
+    if (!name) return null;
+    const s = name.toLowerCase();
+    const ym = s.match(/20\d{2}/); const yr = ym ? parseInt(ym[0]) : new Date().getFullYear();
+    for (const [k,mo] of Object.entries(MONTH_MAP)) {
+      if (s.includes(k)) return new Date(yr, mo, 1);
     }
     return null;
   }
 
-  function rowsFromMatrix(matrix) {
-    if (!matrix || matrix.length < 2) throw new Error("❌ Fichier trop court — minimum 2 lignes requises.");
-    const rawHeader = matrix[0].map(h => String(h ?? "").trim());
-    const dsIdx = findCol(rawHeader, "ds");
-    const yIdx  = findCol(rawHeader, "y");
-    if (dsIdx < 0) throw new Error(`❌ Colonne date introuvable. Colonnes détectées : ${rawHeader.join(", ")}. Renommez-la "ds", "date", "Date", "jour" ou "mois".`);
-    if (yIdx  < 0) throw new Error(`❌ Colonne quantité introuvable. Colonnes détectées : ${rawHeader.join(", ")}. Renommez-la "y", "qty", "quantite", "ventes" ou "stock".`);
-    const rows = matrix.slice(1)
-      .map(row => ({ ds: normalizeDate(row[dsIdx]), y: parseFloat(String(row[yIdx] ?? "").replace(",", ".")) }))
-      .filter(r => r.ds && !isNaN(r.y));
-    if (rows.length < 7) throw new Error("❌ Données insuffisantes — minimum 7 lignes de données valides requises.");
-    return rows;
+  function _toNum(v) {
+    if (typeof v === "number") return v;
+    return parseFloat(String(v).replace(/\s/g,"").replace(",","."));
   }
 
-  function parseCsv(text) {
-    // Supprimer BOM UTF-8 éventuel
+  function _analyzeMatrix(matrix) {
+    if (!matrix || matrix.length < 2) return null;
+    const nCols = Math.max(...matrix.map(r => r.length));
+
+    // Trouver la ligne d'en-tête (première avec du texte non-numérique)
+    let hdr = 0;
+    for (let i = 0; i < Math.min(15, matrix.length); i++) {
+      const textCells = matrix[i].filter(v => v !== null && v !== "" && !_isNumVal(v) && !_isDateVal(v));
+      if (textCells.length >= 1) { hdr = i; break; }
+    }
+
+    const headers = (matrix[hdr] || []).map(h => String(h ?? "").trim());
+    const data = matrix.slice(hdr + 1);
+
+    // Stats par colonne
+    const cols = Array.from({length: nCols}, (_, ci) => {
+      let dates=0, nums=0, empties=0, positiveNums=0;
+      const samples = [];
+      for (const row of data) {
+        const v = row[ci];
+        if (v === null || v === undefined || String(v).trim() === "") { empties++; continue; }
+        if (_isDateVal(v)) { dates++; if (samples.length<2) samples.push(v); }
+        else if (_isNumVal(v)) {
+          nums++;
+          const n = _toNum(v);
+          if (n > 0) positiveNums++;
+          if (samples.length<2) samples.push(v);
+        }
+      }
+      const h = (headers[ci] || "").toLowerCase();
+      return {
+        ci, header: headers[ci] || "",
+        dates, nums, positiveNums, empties,
+        total: data.length - empties,
+        dateScore: (DATE_KW.some(k => h.includes(k)) ? 4 : 0) + dates * 2 + (dates>0?2:0),
+        valScore: (VAL_KW.some(k => h===k || h.includes(k)) ? 3 : 0)
+                + positiveNums * 1.5
+                - (DATE_KW.some(k => h.includes(k)) ? 10 : 0),
+        samples
+      };
+    });
+
+    const sorted_d = [...cols].sort((a,b) => b.dateScore - a.dateScore);
+    const bestDate = sorted_d[0];
+    const bestVal = [...cols].filter(c => c.ci !== bestDate.ci).sort((a,b) => b.valScore - a.valScore)[0] || cols[0];
+    const hasRealDates = bestDate.dateScore > 2;
+
+    return { hdr, headers, data, cols, bestDate, bestVal, hasRealDates };
+  }
+
+  function _extractSeries(analysis, sheetName) {
+    const { data, bestDate, bestVal, hasRealDates } = analysis;
+    const result = {}, rows = [];
+    let idx = 0;
+    for (const row of data) {
+      const rawV = row[bestVal.ci];
+      if (!_isNumVal(rawV) && typeof rawV !== "number") continue;
+      const y = _toNum(rawV);
+      if (isNaN(y) || y <= 0) continue;
+      const rawD = row[bestDate.ci];
+      const ds = (hasRealDates && rawD) ? _toDate(rawD, idx, sheetName) : _seqDate(idx, sheetName);
+      result[ds] = (result[ds] || 0) + y; // additionner si même date
+      idx++;
+    }
+    return Object.entries(result).map(([ds,y]) => ({ds,y})).sort((a,b)=>a.ds.localeCompare(b.ds));
+  }
+
+  function smartParseCSV(text) {
     const clean = text.replace(/^\uFEFF/, "");
     const lines = clean.trim().split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) throw new Error("❌ CSV trop court — minimum 2 lignes requises.");
-    // Détecter le séparateur (virgule ou point-virgule)
-    const sep = (lines[0].split(";").length > lines[0].split(",").length) ? ";" : ",";
-    const matrix = lines.map(l => l.split(sep));
-    return rowsFromMatrix(matrix);
+    if (lines.length < 2) throw new Error("❌ Fichier trop court — minimum 2 lignes.");
+    const sep = lines[0].split(";").length > lines[0].split(",").length ? ";" : ",";
+    const matrix = lines.map(l => l.split(sep).map(v => v.trim().replace(/^"|"$/g,"")));
+    const analysis = _analyzeMatrix(matrix);
+    if (!analysis) throw new Error("❌ Impossible d'analyser ce fichier CSV.");
+    const rows = _extractSeries(analysis, "CSV");
+    if (rows.length < 7) throw new Error(`❌ Seulement ${rows.length} valeurs extraites (minimum 7).\nColonne date: "${analysis.bestDate.header || "générée"}" | Colonne valeur: "${analysis.bestVal.header}"`);
+    return { rows, meta: { mode: analysis.hasRealDates?"série temporelle":"bordereau", dateCol: analysis.bestDate.header||"générée", valueCol: analysis.bestVal.header, count: rows.length } };
+  }
+
+  function smartParseExcel(buf) {
+    const wb = XLSX.read(buf, { type:"array", cellDates:false, raw:true });
+    const results = [];
+    for (const sn of wb.SheetNames) {
+      const ws = wb.Sheets[sn];
+      const matrix = XLSX.utils.sheet_to_json(ws, { header:1, defval:null, raw:true });
+      if (!matrix || matrix.length < 3) continue;
+      const analysis = _analyzeMatrix(matrix);
+      if (!analysis) continue;
+      const rows = _extractSeries(analysis, sn);
+      if (rows.length < 3) continue;
+      const quality = rows.length + (analysis.hasRealDates?20:0) + analysis.bestVal.positiveNums*0.5;
+      results.push({ sn, rows, analysis, quality });
+    }
+    if (results.length === 0) throw new Error("❌ Aucune donnée exploitable dans ce fichier Excel.\n\nVérifiez que votre fichier contient des colonnes avec des valeurs numériques (montants, quantités, ventes...).");
+    results.sort((a,b) => b.quality - a.quality);
+    const best = results[0];
+    if (best.rows.length < 7) throw new Error(`❌ Données insuffisantes : ${best.rows.length} lignes valides (minimum 7).\nFeuille: "${best.sn}" | Valeur: "${best.analysis.bestVal.header}"`);
+    return { rows: best.rows, meta: { sheet: best.sn, mode: best.analysis.hasRealDates?"série temporelle":"bordereau (dates auto)", dateCol: best.analysis.bestDate.header||"auto", valueCol: best.analysis.bestVal.header, count: best.rows.length, sheets: results.length } };
   }
 
   function handleFile(e) {
@@ -169,7 +280,7 @@ export default function Dashboard() {
     const isExcel = name.endsWith(".xlsx") || name.endsWith(".xls");
     const isCsv   = name.endsWith(".csv");
     if (!isExcel && !isCsv) {
-      setCsvError("❌ Format non supporté — utilisez un fichier .csv, .xlsx ou .xls");
+      setCsvError("❌ Format non supporté — utilisez .csv, .xlsx ou .xls");
       return;
     }
     setCsvError("");
@@ -177,13 +288,15 @@ export default function Dashboard() {
     if (isExcel) {
       reader.onload = ev => {
         try {
-          const wb = XLSX.read(ev.target.result, { type: "array", cellDates: false });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-          const parsed = rowsFromMatrix(matrix);
-          setData(parsed);
+          const {rows, meta} = smartParseExcel(ev.target.result);
+          setData(rows);
           setResult(null);
-        } catch (err) {
+          setCsvError("");
+          // Afficher info sur l'extraction
+          if (meta.mode === "bordereau (dates auto)") {
+            setCsvError(`ℹ️ Mode bordereau détecté — ${meta.count} postes extraits depuis "${meta.sheet}" | Valeur: ${meta.valueCol} | Dates générées automatiquement`);
+          }
+        } catch(err) {
           setCsvError(err.message);
           setData(null);
         }
@@ -192,10 +305,11 @@ export default function Dashboard() {
     } else {
       reader.onload = ev => {
         try {
-          const parsed = parseCsv(ev.target.result);
-          setData(parsed);
+          const {rows, meta} = smartParseCSV(ev.target.result);
+          setData(rows);
           setResult(null);
-        } catch (err) {
+          setCsvError("");
+        } catch(err) {
           setCsvError(err.message);
           setData(null);
         }
