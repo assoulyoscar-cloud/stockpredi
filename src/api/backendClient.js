@@ -1,7 +1,9 @@
+import { supabase } from "./supabaseClient";
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "https://stockpredi-backend.onrender.com";
 
 async function apiFetch(path, options = {}) {
-  const { data: { session } } = await import("../api/supabaseClient").then(m => m.supabase.auth.getSession());
+  const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   const res = await fetch(`${BACKEND_URL}${path}`, {
     ...options,
