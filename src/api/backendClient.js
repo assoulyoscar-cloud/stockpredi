@@ -60,6 +60,11 @@ export const backendClient = {
   cancelSubscription: () => apiFetch("/api/stripe/cancel-subscription", { method: "POST" }),
   subscriptionStatus: () => apiFetch("/api/stripe/status"),
 
+  // RGPD
+  rgpdExport: () => apiFetch("/api/rgpd/export", { method: "POST" }),
+  rgpdStatus: () => apiFetch("/api/rgpd/status"),
+  rgpdDelete: () => apiFetch("/api/rgpd/delete", { method: "DELETE" }),
+
   // Health
   health: () => fetch(`${BACKEND_URL}/health`).then(r => r.json())
 };

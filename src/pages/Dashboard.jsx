@@ -28,6 +28,13 @@ export default function Dashboard() {
   const [subStatus, setSubStatus] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
 
+  // RGPD state
+  const [rgpdLoading, setRgpdLoading] = useState(false);
+  const [rgpdError, setRgpdError] = useState("");
+  const [rgpdSuccess, setRgpdSuccess] = useState("");
+  const [rgpdStatus, setRgpdStatus] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { navigate("/login"); return; }
@@ -116,6 +123,58 @@ export default function Dashboard() {
     }
   }
 
+  // RGPD: Export data
+  async function handleRgpdExport() {
+    setRgpdLoading(true);
+    setRgpdError("");
+    setRgpdSuccess("");
+    try {
+      const res = await backendClient.rgpdExport();
+      setRgpdSuccess("✓ Données exportées avec succès ! Un email contenant le PDF a été envoyé à votre adresse et le fichier a été sauvegardé dans Google Drive.");
+      // Refresh status after export
+      setTimeout(() => loadRgpdStatus(), 1000);
+    } catch (err) {
+      setRgpdError(`❌ Erreur lors de l'export — ${err.message || "Réessayez dans quelques instants."}`);
+    } finally {
+      setRgpdLoading(false);
+    }
+  }
+
+  // RGPD: Load export history
+  async function loadRgpdStatus() {
+    setRgpdLoading(true);
+    setRgpdError("");
+    try {
+      const res = await backendClient.rgpdStatus();
+      setRgpdStatus(res);
+    } catch (err) {
+      setRgpdError(`❌ Erreur lors du chargement de l'historique — ${err.message || "Réessayez."}`);
+    } finally {
+      setRgpdLoading(false);
+    }
+  }
+
+  // RGPD: Delete account
+  async function handleRgpdDelete() {
+    setRgpdLoading(true);
+    setRgpdError("");
+    setRgpdSuccess("");
+    setShowDeleteConfirm(false);
+    try {
+      const res = await backendClient.rgpdDelete();
+      setRgpdSuccess("✓ Compte supprimé avec succès. Redirection...");
+      setTimeout(() => {
+        supabase.auth.signOut();
+        navigate("/");
+      }, 2000);
+    } catch (err) {
+      setRgpdError(`❌ Erreur lors de la suppression — ${err.message || "Contactez support@stockpredi.fr"}`);
+      setShowDeleteConfirm(false);
+    } finally {
+      setRgpdLoading(false);
+    }
+  }
+
   const planLabel = subStatus?.plan || "active";
   const planColor = planLabel === "active" ? "#006600" : planLabel === "trial" ? "#cc6600" : "#cc0000";
 
@@ -134,8 +193,8 @@ export default function Dashboard() {
     label: { display: "block", fontWeight: "700", marginBottom: "8px", fontSize: "13px" },
     input: { border: "1px solid #000", padding: "8px 12px", fontFamily: "Courier New, monospace", fontSize: "14px", width: "100%", boxSizing: "border-box" },
     btn: (variant = "primary") => ({
-      background: variant === "primary" ? "#000" : "#fff",
-      color: variant === "primary" ? "#fff" : "#000",
+      background: variant === "primary" ? "#000" : variant === "danger" ? "#cc0000" : "#fff",
+      color: variant === "primary" || variant === "danger" ? "#fff" : "#000",
       border: "1px solid #000", padding: "10px 24px",
       fontFamily: "Courier New, monospace", fontWeight: "700", fontSize: "14px",
       cursor: "pointer"
@@ -181,7 +240,7 @@ export default function Dashboard() {
 
         {/* TABS */}
         <div style={STYLE.tabs}>
-          {[["forecast","Nouvelle prévision"],["history","Historique"],["account","Mon compte"]].map(([id, label]) => (
+          {[["forecast","Nouvelle prévision"],["history","Historique"],["account","Mon compte"],["privacy","Confidentialité"]].map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)} style={STYLE.tab(tab === id)}>{label}</button>
           ))}
         </div>
@@ -416,6 +475,148 @@ export default function Dashboard() {
               <button onClick={handleLogout} style={{ ...STYLE.btn("secondary"), marginTop: "24px" }}>
                 Se déconnecter
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: PRIVACY (RGPD) */}
+        {tab === "privacy" && (
+          <div>
+            {/* RGPD ERRORS & SUCCESS */}
+            {rgpdError && (
+              <div style={{ background: "#fff0f0", border: "1px solid #cc0000", padding: "12px", marginBottom: "24px", fontSize: "14px", color: "#cc0000" }}>
+                {rgpdError}
+              </div>
+            )}
+            {rgpdSuccess && (
+              <div style={{ background: "#f0fff0", border: "1px solid #006600", padding: "12px", marginBottom: "24px", fontSize: "14px", color: "#006600" }}>
+                {rgpdSuccess}
+              </div>
+            )}
+
+            {/* CONFIDENTIALITÉ & DONNÉES */}
+            <div style={STYLE.card}>
+              <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "4px" }}>
+                Confidentialité et RGPD
+              </h2>
+              <p style={{ fontSize: "13px", color: "#555", marginBottom: "20px" }}>
+                Conformément au RGPD (Règlement Général sur la Protection des Données), vous avez le droit de télécharger, modifier ou supprimer vos données personnelles.
+              </p>
+
+              <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", marginTop: "20px" }}>
+                📥 Télécharger mes données
+              </h3>
+              <p style={{ fontSize: "13px", color: "#555", marginBottom: "12px" }}>
+                Récupérez une copie complète de vos données au format PDF. Le fichier sera envoyé par email et sauvegardé dans Google Drive.
+              </p>
+              <button
+                onClick={handleRgpdExport}
+                disabled={rgpdLoading}
+                style={{ ...STYLE.btn("primary"), opacity: rgpdLoading ? 0.6 : 1 }}
+              >
+                {rgpdLoading ? "Préparation..." : "Télécharger mes données"}
+              </button>
+
+              <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", marginTop: "24px" }}>
+                📋 Historique des exports
+              </h3>
+              <p style={{ fontSize: "13px", color: "#555", marginBottom: "12px" }}>
+                Consultez la liste de tous vos exports de données et les dates de téléchargement.
+              </p>
+              <button
+                onClick={loadRgpdStatus}
+                disabled={rgpdLoading}
+                style={{ ...STYLE.btn("secondary"), opacity: rgpdLoading ? 0.6 : 1 }}
+              >
+                {rgpdLoading ? "Chargement..." : "Afficher l'historique"}
+              </button>
+
+              {rgpdStatus && rgpdStatus.exports && rgpdStatus.exports.length > 0 && (
+                <div style={{ marginTop: "16px", padding: "12px", background: "#f9f9f9", border: "1px solid #eee" }}>
+                  <p style={{ fontSize: "12px", fontWeight: "700", marginBottom: "8px" }}>
+                    {rgpdStatus.exports.length} export(s) trouvé(s) :
+                  </p>
+                  <table style={{ width: "100%", fontSize: "12px", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid #ddd" }}>
+                        <th style={{ textAlign: "left", padding: "6px", fontWeight: "700" }}>Date</th>
+                        <th style={{ textAlign: "left", padding: "6px", fontWeight: "700" }}>Statut</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rgpdStatus.exports.map((exp, i) => (
+                        <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
+                          <td style={{ padding: "6px" }}>
+                            {new Date(exp.created_at).toLocaleDateString("fr-FR", { 
+                              year: "numeric", month: "long", day: "numeric", 
+                              hour: "2-digit", minute: "2-digit" 
+                            })}
+                          </td>
+                          <td style={{ padding: "6px", color: exp.status === "completed" ? "#006600" : "#cc6600" }}>
+                            {exp.status === "completed" ? "✓ Complété" : "⏳ En attente"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* SUPPRIMER MON COMPTE */}
+            <div style={STYLE.card}>
+              <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "4px" }}>
+                ⚠️ Zone de danger
+              </h2>
+              <p style={{ fontSize: "13px", color: "#555", marginBottom: "16px", marginTop: "12px" }}>
+                La suppression de votre compte est définitive et irréversible. Toutes vos données seront supprimées des serveurs.
+              </p>
+
+              {!showDeleteConfirm ? (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  style={STYLE.btn("danger")}
+                >
+                  Supprimer mon compte
+                </button>
+              ) : (
+                <div style={{ background: "#fff0f0", border: "1px solid #cc0000", padding: "16px" }}>
+                  <p style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", color: "#cc0000" }}>
+                    ⚠️ Êtes-vous vraiment sûr(e) ?
+                  </p>
+                  <p style={{ fontSize: "13px", color: "#555", marginBottom: "16px" }}>
+                    Cette action est définitive. Votre compte et toutes vos données seront supprimés.
+                  </p>
+                  <div style={{ display: "flex", gap: "12px" }}>
+                    <button
+                      onClick={handleRgpdDelete}
+                      disabled={rgpdLoading}
+                      style={{ ...STYLE.btn("danger"), opacity: rgpdLoading ? 0.6 : 1 }}
+                    >
+                      {rgpdLoading ? "Suppression..." : "Oui, supprimer mon compte"}
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      disabled={rgpdLoading}
+                      style={{ ...STYLE.btn("secondary"), opacity: rgpdLoading ? 0.6 : 1 }}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* POLITIQUE DE CONFIDENTIALITÉ LINK */}
+            <div style={STYLE.card}>
+              <p style={{ fontSize: "13px", color: "#555" }}>
+                Pour plus d'informations, consultez notre{" "}
+                <Link to="/politique-confidentialite" style={{ color: "#000", fontWeight: "700", textDecoration: "underline" }}>
+                  politique de confidentialité
+                </Link>
+                {" "}ou contactez notre responsable de la protection des données (DPO) à{" "}
+                <strong>dpo@stockpredi.fr</strong>
+              </p>
             </div>
           </div>
         )}
