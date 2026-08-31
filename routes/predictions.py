@@ -1,98 +1,98 @@
 from flask import Blueprint, request, jsonify
-from auth_middleware_backend import auth_required
+import pandas as pd
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from middleware.auth_middleware import auth_required
+from models.forecast import StockForecast, detect_alerts
+from models.recommendations import OllamaRecommender, compute_trend, compute_cv
 
 predictions_bp = Blueprint("predictions", __name__)
 
 
+def parse_data(raw: list) -> pd.DataFrame:
+    if not raw or not isinstance(raw, list):
+        raise ValueError("data doit etre une liste non vide")
+    df = pd.DataFrame(raw)
+    if "ds" not in df.columns or "y" not in df.columns:
+        raise ValueError("Chaque enregistrement doit avoir 'ds' (date) et 'y' (quantite)")
+    df["ds"] = pd.to_datetime(df["ds"], errors="coerce")
+    df["y"] = pd.to_numeric(df["y"], errors="coerce").fillna(0)
+    df = df.dropna(subset=["ds"]).sort_values("ds")
+    if len(df) < 7:
+        raise ValueError("Minimum 7 points de donnees requis pour une prevision fiable")
+    return df[["ds", "y"]].reset_index(drop=True)
+
+
 @predictions_bp.route("/forecast", methods=["POST"])
 @auth_required
-def forecast():
-    body = request.get_json(silent=True) or {}
-    data = body.get("data", [])
-    periods = int(body.get("periods", 30))
-
-    if not data or len(data) < 3:
-        return jsonify({"error": "Au moins 3 points de donnees requis"}), 400
-    if periods < 1 or periods > 365:
-        return jsonify({"error": "Periods doit etre entre 1 et 365"}), 400
-
+def forecast(user_id: str):
     try:
-        y = np.array([float(v) for v in data])
-        X = np.arange(len(y)).reshape(-1, 1)
-
-        model = LinearRegression()
-        model.fit(X, y)
-
-        future_X = np.arange(len(y), len(y) + periods).reshape(-1, 1)
-        forecast_values = model.predict(future_X).tolist()
-        r2 = float(model.score(X, y))
-        slope = float(model.coef_[0])
-
-        return jsonify({
-            "forecast": forecast_values,
-            "confidence": round(max(0.0, r2), 3),
-            "trend": "hausse" if slope > 0 else "baisse" if slope < 0 else "stable",
-            "slope": round(slope, 4),
-            "periods": periods
-        }), 200
-    except (ValueError, TypeError) as e:
-        return jsonify({"error": "Donnees invalides", "detail": str(e)}), 400
+        body = request.get_json() or {}
+        raw = body.get("data", [])
+        periods = int(body.get("periods", 30))
+        df = parse_data(raw)
+        model = StockForecast(df)
+        result = model.fit_and_predict(periods=periods)
+        return jsonify(result)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
-        return jsonify({"error": "Erreur de prevision", "detail": str(e)}), 500
+        return jsonify({"error": f"Erreur interne: {str(e)}"}), 500
 
 
 @predictions_bp.route("/recommendations", methods=["POST"])
 @auth_required
-def recommendations():
-    body = request.get_json(silent=True) or {}
-    data = body.get("data", [])
-    product_name = body.get("product_name", "Produit")[:100]
-    periods = int(body.get("periods", 30))
-
-    if not data or len(data) < 3:
-        return jsonify({"error": "Au moins 3 points de donnees requis"}), 400
-
+def recommendations(user_id: str):
     try:
-        y = np.array([float(v) for v in data])
-        X = np.arange(len(y)).reshape(-1, 1)
+        body = request.get_json() or {}
+        raw = body.get("data", [])
+        product_name = body.get("product_name", "Mon produit")
+        periods = int(body.get("periods", 30))
 
-        model = LinearRegression()
-        model.fit(X, y)
+        df = parse_data(raw)
 
-        slope = float(model.coef_[0])
-        r2 = float(model.score(X, y))
-        last_value = float(y[-1])
-        avg_value = float(np.mean(y))
-        threshold = 0.05 * abs(avg_value) if avg_value != 0 else 0.01
+        model = StockForecast(df)
+        forecast_result = model.fit_and_predict(periods=periods)
+        accuracy_score = forecast_result.get("accuracy_score", 0)
 
-        recs = []
+        predictions_list = forecast_result.get("predictions", [])
+        alerts = detect_alerts(predictions_list, df)
 
-        if slope > threshold:
-            recs.append(f"Tendance haussiere detectee pour {product_name} (+{slope:.2f}/periode). Envisagez d'augmenter vos stocks.")
-        elif slope < -threshold:
-            recs.append(f"Tendance baissiere detectee pour {product_name} ({slope:.2f}/periode). Reduisez les commandes et revoyez la strategie.")
+        trend = compute_trend(df)
+        cv = compute_cv(df)
+
+        recommender = OllamaRecommender()
+        context = {
+            "product_name": product_name,
+            "alerts": alerts,
+            "accuracy": accuracy_score,
+            "trend": trend,
+            "cv": cv,
+            "data_points": len(df),
+        }
+        rec_result = recommender.recommend(context)
+
+        if accuracy_score < 0.40:
+            summary = f"Donnees tres irregulières — precision {accuracy_score:.0%}. Les previsions sont peu fiables. Enrichissez votre historique."
+        elif accuracy_score < 0.60:
+            summary = f"Precision moderee ({accuracy_score:.0%}). {len(alerts)} alerte(s). Tendance : {trend}. A confirmer avec plus de donnees."
+        elif alerts:
+            summary = f"{len(alerts)} alerte(s) detectee(s). Tendance {trend}. Precision {accuracy_score:.0%}."
         else:
-            recs.append(f"{product_name} est stable. Optimisez les couts operationnels.")
-
-        if r2 > 0.8:
-            recs.append("Signal fort — la tendance est claire et fiable (R2 > 0.8).")
-        elif r2 > 0.5:
-            recs.append("Signal modere — la tendance est visible mais avec prudence (R2 entre 0.5 et 0.8).")
-        else:
-            recs.append("Signal faible — les donnees sont volatiles. Collectez plus de donnees avant de decider (R2 < 0.5).")
-
-        next_value = float(model.predict([[len(y) + periods]])[0])
-        change_pct = ((next_value - last_value) / abs(last_value) * 100) if last_value != 0 else 0
-        recs.append(f"Dans {periods} periodes : valeur estimee a {next_value:.2f} (soit {change_pct:+.1f}% vs aujourd'hui).")
+            summary = f"0 alerte(s) detectee(s). Tendance {trend}. Precision modele : {accuracy_score:.0%}."
 
         return jsonify({
-            "recommendations": recs,
-            "confidence": round(max(0.0, r2), 3),
-            "trend": "hausse" if slope > 0 else "baisse" if slope < 0 else "stable"
-        }), 200
-    except (ValueError, TypeError) as e:
-        return jsonify({"error": "Donnees invalides", "detail": str(e)}), 400
+            "summary": summary,
+            "trend": trend,
+            "recommendations": rec_result.get("recommendations", []),
+            "ai_source": rec_result.get("ai_source", "rules"),
+            "alerts": alerts,
+            "forecast": {
+                **forecast_result,
+                "data_points": len(df),
+            },
+        })
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
-        return jsonify({"error": "Erreur de recommandation", "detail": str(e)}), 500
+        return jsonify({"error": f"Erreur interne: {str(e)}"}), 500
