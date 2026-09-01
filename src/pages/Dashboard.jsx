@@ -36,12 +36,9 @@ export default function Dashboard() {
   const [rgpdContactOpen, setRgpdContactOpen] = useState(false);
   const [rgpdContactType, setRgpdContactType] = useState("question");
   const [rgpdContactMsg, setRgpdContactMsg] = useState("");
-
-  // RGPD state
   const [rgpdLoading, setRgpdLoading] = useState(false);
   const [rgpdError, setRgpdError] = useState("");
   const [rgpdSuccess, setRgpdSuccess] = useState("");
-  const [rgpdStatus, setRgpdStatus] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
