@@ -481,7 +481,7 @@ export default function Dashboard() {
     setRgpdSuccess("");
     try {
       await backendClient.rgpdExport();
-      setRgpdSuccess("✓ Données exportées avec succès ! Un email contenant le PDF a été envoyé à votre adresse et le fichier a été sauvegardé dans Google Drive.");
+      setRgpdSuccess("✓ Données exportées avec succès ! Un email contenant le PDF a été envoyé à votre adresse et le fichier a été ");
       // Refresh status after export
       setTimeout(() => loadRgpdStatus(), 1000);
     } catch (err) {
@@ -975,7 +975,7 @@ export default function Dashboard() {
                 📥 Télécharger mes données
               </h3>
               <p style={{ fontSize: "13px", color: "#555", marginBottom: "12px" }}>
-                Récupérez une copie complète de vos données au format PDF. Le fichier sera envoyé par email et sauvegardé dans Google Drive.
+                Récupérez une copie complète de vos données au format PDF. Le fichier sera envoyé par email et 
               </p>
               <button
                 onClick={handleRgpdExport}
