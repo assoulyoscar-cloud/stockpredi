@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [rgpdContactOpen, setRgpdContactOpen] = useState(false);
   const [rgpdContactType, setRgpdContactType] = useState("question");
   const [rgpdContactMsg, setRgpdContactMsg] = useState("");
+  const [showAllPredictions, setShowAllPredictions] = useState(false);
   const [rgpdLoading, setRgpdLoading] = useState(false);
   const [rgpdError, setRgpdError] = useState("");
   const [rgpdSuccess, setRgpdSuccess] = useState("");
@@ -438,6 +439,7 @@ export default function Dashboard() {
     setError("");
     setResult(null);
     setLoading(true);
+    setShowAllPredictions(false);
     try {
       const payload = data || SAMPLE_DATA;
       const res = await backendClient.recommendations(payload, productName, periods);
@@ -706,7 +708,17 @@ export default function Dashboard() {
                       via {result.ai_source === "ollama" ? "Llama3.1" : "règles métier"}
                     </span>
                   </h2>
-                  <p style={{ fontSize: "13px", color: "#555", marginBottom: "16px" }}>{result.summary}</p>
+                  <p style={{ fontSize: "13px", color: "#555", marginBottom: "8px" }}>{result.summary}</p>
+                  {result.forecast?.seasonality_context && (
+                    <p style={{ fontSize: "11px", color: "#006600", marginBottom: "8px", borderLeft: "3px solid #006600", paddingLeft: "8px" }}>
+                      {result.forecast.seasonality_context}
+                    </p>
+                  )}
+                  {(result.forecast?.anomalies || []).map((a, i) => (
+                    <p key={i} style={{ fontSize: "11px", color: "#cc6600", marginBottom: "4px", borderLeft: "3px solid #cc6600", paddingLeft: "8px" }}>
+                      {a}
+                    </p>
+                  ))}
                   {(result.recommendations || []).map((r, i) => (
                     <div key={i} style={STYLE.alert(r.priority)}>
                       <strong>[{r.priority}]</strong> {r.action}
@@ -754,7 +766,7 @@ export default function Dashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {(result.forecast?.predictions || []).slice(0,10).map((p, i) => (
+                        {(result.forecast?.predictions || []).slice(0, showAllPredictions ? undefined : 10).map((p, i) => (
                           <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
                             <td style={{ padding: "8px" }}>{p.date}</td>
                             <td style={{ padding: "8px", textAlign: "right", fontWeight: "700" }}>{p.forecast}</td>
@@ -764,10 +776,13 @@ export default function Dashboard() {
                         ))}
                       </tbody>
                     </table>
-                    {(result.forecast?.predictions || []).length > 10 && (
-                      <p style={{ fontSize: "12px", color: "#888", marginTop: "8px" }}>
-                        + {(result.forecast.predictions.length - 10)} lignes supplémentaires
-                      </p>
+                    {(result.forecast?.predictions || []).length > 10 && !showAllPredictions && (
+                      <button
+                        onClick={() => setShowAllPredictions(true)}
+                        style={{ ...STYLE.btn("secondary"), marginTop: "8px", fontSize: "12px", padding: "6px 14px" }}
+                      >
+                        + {(result.forecast.predictions.length - 10)} lignes — Voir tout
+                      </button>
                     )}
                     <button
                       onClick={generatePDF}
@@ -1076,4 +1091,4 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}
+    }
