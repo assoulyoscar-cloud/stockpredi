@@ -1,100 +1,76 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
+import { Link } from "react-router-dom";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
+  const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const STYLE = {
+    page: { fontFamily: "Courier New, monospace", minHeight: "100vh", background: "#fff", color: "#000", display: "flex", flexDirection: "column" },
+    nav: { borderBottom: "1px solid #000", padding: "12px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" },
+    main: { maxWidth: "480px", margin: "80px auto", padding: "32px", width: "100%" },
+    label: { display: "block", fontWeight: "700", marginBottom: "8px", fontSize: "13px" },
+    input: { border: "1px solid #000", padding: "10px 14px", fontFamily: "Courier New, monospace", fontSize: "14px", width: "100%", boxSizing: "border-box", marginBottom: "16px" },
+    btn: { background: "#000", color: "#fff", border: "none", padding: "12px 24px", fontFamily: "Courier New, monospace", fontWeight: "700", fontSize: "14px", cursor: "pointer", width: "100%", opacity: 1 },
+    error: { background: "#fff0f0", border: "1px solid #cc0000", padding: "10px 14px", marginBottom: "16px", fontSize: "13px", color: "#cc0000" },
+    success: { background: "#f0fff0", border: "1px solid #006600", padding: "10px 14px", marginBottom: "16px", fontSize: "13px", color: "#006600" },
+    link: { color: "#000", fontSize: "13px", textAlign: "center", display: "block", marginTop: "16px" },
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
-
-    if (!email.trim()) {
-      setError("❌ Merci de renseigner votre email.");
-      return;
-    }
-
+    if (!email.trim()) { setErr("Veuillez saisir votre adresse email."); return; }
     setLoading(true);
+    setErr("");
     try {
-      const { error: err } = await supabase.auth.resetPasswordForEmail(
-        email.trim().toLowerCase(),
-        { redirectTo: `${window.location.origin}/reset-password` }
-      );
-      if (err) throw err;
-      // Supabase ne révèle jamais si l'email existe (anti-énumération) :
-      // on affiche toujours le message de succès.
-      setSent(true);
-    } catch (err) {
-      const msg = err.message;
-      if (msg?.toLowerCase().includes("rate limit") || msg?.toLowerCase().includes("too many")) {
-        setError("❌ Trop de tentatives — merci de réessayer dans quelques minutes.");
-      } else if (msg?.toLowerCase().includes("invalid")) {
-        setError("❌ Adresse email invalide.");
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: window.location.origin + "/reset-password",
+      });
+      if (error) {
+        setErr(error.message || error.error_description || "Impossible d'envoyer le lien. Vérifiez l'adresse email.");
       } else {
-        setError(`❌ Impossible d'envoyer le lien — ${msg || "réessayez dans quelques secondes."}`);
+        setSent(true);
       }
+    } catch (e) {
+      setErr("Impossible d'envoyer le lien. Réessayez dans quelques instants.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ fontFamily: "Courier New, monospace", background: "#fff", minHeight: "100vh" }}>
-      <nav style={{ borderBottom: "1px solid #000", padding: "12px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-          <img src="/logoSTOCKPREDI.png" alt="StockPredi" style={{ height: "32px" }} />
-          <span style={{ fontSize: "18px", fontWeight: "700", color: "#000" }}>STOCKPREDI</span>
-        </Link>
-        <Link to="/login" style={{ textDecoration: "underline", color: "#000", fontSize: "14px" }}>Retour à la connexion</Link>
+    <div style={STYLE.page}>
+      <nav style={STYLE.nav}>
+        <span style={{ fontWeight: "700", fontSize: "16px" }}>STOCKPREDI</span>
+        <Link to="/login" style={{ ...STYLE.link, marginTop: 0 }}>Retour à la connexion</Link>
       </nav>
-
-      <div style={{ maxWidth: "400px", margin: "80px auto", padding: "32px" }}>
-        <h1 style={{ fontSize: "28px", fontWeight: "700", marginBottom: "16px" }}>Mot de passe oublié</h1>
-        <p style={{ fontSize: "14px", color: "#555", marginBottom: "32px" }}>
+      <div style={STYLE.main}>
+        <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "8px" }}>Mot de passe oublié</h1>
+        <p style={{ fontSize: "14px", color: "#555", marginBottom: "24px" }}>
           Indiquez votre email, nous vous envoyons un lien pour réinitialiser votre mot de passe.
         </p>
-
-        {error && (
-          <div style={{ background: "#fff0f0", border: "1px solid #cc0000", padding: "12px", marginBottom: "24px", fontSize: "14px", color: "#cc0000" }}>
-            {error}
-          </div>
-        )}
-
-        {sent ? (
-          <div style={{ background: "#f0fff4", border: "1px solid #008800", padding: "16px", fontSize: "14px", color: "#006600" }}>
-            ✅ Lien envoyé à votre email.
-            <br />
-            Vérifiez votre boîte de réception (et vos spams) pour réinitialiser votre mot de passe.
-          </div>
-        ) : (
+        {err && <div style={STYLE.error}>❌ {err}</div>}
+        {sent && <div style={STYLE.success}>✅ Lien envoyé à {email}. Vérifiez vos emails (et vos spams).</div>}
+        {!sent && (
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontWeight: "700", marginBottom: "8px", fontSize: "14px" }}>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                style={{ width: "100%", border: "1px solid #000", padding: "10px 12px", fontFamily: "Courier New, monospace", fontSize: "14px", boxSizing: "border-box" }}
-                placeholder="votre@email.com"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ width: "100%", background: "#000", color: "#fff", border: "none", padding: "14px", fontFamily: "Courier New, monospace", fontWeight: "700", fontSize: "14px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
-            >
-              {loading ? "Envoi..." : "Envoyer lien de réinitialisation"}
+            <label style={STYLE.label}>Email</label>
+            <input
+              style={STYLE.input}
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="votre@email.com"
+              autoFocus
+            />
+            <button style={{ ...STYLE.btn, opacity: loading ? 0.6 : 1 }} disabled={loading}>
+              {loading ? "Envoi en cours..." : "Envoyer lien de réinitialisation"}
             </button>
           </form>
         )}
-
-        <p style={{ marginTop: "24px", fontSize: "14px", textAlign: "center" }}>
-          <Link to="/login" style={{ textDecoration: "underline", color: "#000" }}>Retour à la connexion</Link>
-        </p>
+        <Link to="/login" style={STYLE.link}>Retour à la connexion</Link>
       </div>
     </div>
   );
