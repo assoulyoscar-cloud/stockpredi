@@ -481,7 +481,7 @@ export default function Dashboard() {
     setRgpdSuccess("");
     try {
       await backendClient.rgpdExport();
-      setRgpdSuccess("✓ Données exportées avec succès ! Un email contenant le PDF a été envoyé à votre adresse et le fichier a été ");
+      setRgpdSuccess("Données exportées avec succès");
       // Refresh status after export
       setTimeout(() => loadRgpdStatus(), 1000);
     } catch (err) {
@@ -905,45 +905,7 @@ export default function Dashboard() {
                 Se déconnecter
               </button>
             </div>
-            <div style={{...STYLE.card,marginTop:"24px"}}>
-              <h2 style={{fontSize:"16px",fontWeight:"700",marginBottom:"16px"}}>Confidentialite et RGPD</h2>
-              <p style={{fontSize:"12px",color:"#555",marginBottom:"16px"}}>Conformement au RGPD, vous disposez des droits suivants.</p>
-              <div style={{fontSize:"12px",marginBottom:"16px",lineHeight:"1.8"}}>
-                <div>Art. 15 - Droit d'acces a vos donnees</div>
-                <div>Art. 16 - Droit de rectification</div>
-                <div>Art. 17 - Droit a l'effacement</div>
-                <div>Art. 20 - Droit a la portabilite</div>
-                <div>Art. 21 - Droit d'opposition</div>
-              </div>
-              <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
-                <div>
-                  <button onClick={handleRgpdExport} disabled={rgpdLoading} style={{...STYLE.btn("primary"),fontSize:"13px",opacity:rgpdLoading?0.6:1}}>
-                    {rgpdLoading?"Generation...":"Telecharger mes donnees (PDF par email)"}
-                  </button>
-                  {rgpdStatus?.last_export&&<p style={{fontSize:"11px",color:"#555",marginTop:"6px"}}>Dernier export : {new Date(rgpdStatus.last_export).toLocaleDateString("fr-FR")}</p>}
-                </div>
-                <button onClick={handleRgpdDelete} disabled={rgpdLoading} style={{...STYLE.btn("secondary"),color:"#cc0000",borderColor:"#cc0000",fontSize:"13px"}}>
-                  {rgpdLoading?"Suppression...":"Supprimer mes previsions"}
-                </button>
-                <button onClick={()=>setRgpdContactOpen(o=>!o)} style={{...STYLE.btn("secondary"),fontSize:"13px"}}>
-                  Contacter le DPO
-                </button>
-                {rgpdContactOpen&&(<div style={{border:"1px solid #000",padding:"16px",marginTop:"4px"}}>
-                  <select style={{...STYLE.input,marginBottom:"8px"}} value={rgpdContactType} onChange={e=>setRgpdContactType(e.target.value)}>
-                    <option value="question">Question generale</option>
-                    <option value="rectification">Rectification de donnees</option>
-                    <option value="opposition">Opposition au traitement</option>
-                    <option value="suppression">Suppression de compte</option>
-                  </select>
-                  <textarea style={{...STYLE.input,height:"80px",resize:"vertical"}} placeholder="Votre message..." value={rgpdContactMsg} onChange={e=>setRgpdContactMsg(e.target.value)}/>
-                  <button onClick={handleRgpdContact} style={{...STYLE.btn("primary"),marginTop:"8px",fontSize:"13px"}}>Envoyer</button>
-                </div>)}
-              </div>
-              <div style={{marginTop:"16px",fontSize:"12px",borderTop:"1px solid #eee",paddingTop:"12px"}}>
-                <a href="/politique-confidentialite" style={{color:"#000",marginRight:"16px"}}>Politique de confidentialite</a>
-                <a href="/mentions-legales" style={{color:"#000"}}>Mentions legales</a>
-              </div>
-            </div>
+            
           </div>
         )}
 
