@@ -29,9 +29,7 @@ export default function Dashboard() {
   const [subLoading, setSubLoading] = useState(true);
   const [history, setHistory] = useState(null); // null = pas encore charge
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [rgpdExporting, setRgpdExporting] = useState(false);
   const [importedFiles, setImportedFiles] = useState([]); // liste des fichiers importés
-  const [rgpdDeleting, setRgpdDeleting] = useState(false);
   const [rgpdStatus, setRgpdStatus] = useState(null);
   const [rgpdContactOpen, setRgpdContactOpen] = useState(false);
   const [rgpdContactType, setRgpdContactType] = useState("question");
@@ -83,19 +81,6 @@ export default function Dashboard() {
     setTab("forecast");
   }
 
-  async function handleRgpdExport() {
-    setRgpdExporting(true);
-    try { await backendClient.rgpdExport(); setRgpdStatus(s=>({...s,last_export:new Date().toISOString()})); alert("Export RGPD envoye par email !"); }
-    catch(err) { alert("Erreur : "+err.message); }
-    finally { setRgpdExporting(false); }
-  }
-  async function handleRgpdDelete() {
-    if (!window.confirm("Supprimer toutes vos previsions ? Action irreversible.")) return;
-    setRgpdDeleting(true);
-    try { const res=await backendClient.rgpdDelete(); setHistory([]); alert(res.deleted_predictions+" prevision(s) supprimee(s)."); }
-    catch(err) { alert("Erreur : "+err.message); }
-    finally { setRgpdDeleting(false); }
-  }
   async function handleRgpdContact() {
     if (!rgpdContactMsg.trim()) return;
     try { await backendClient.rgpdContact({email:user?.email,type:rgpdContactType,message:rgpdContactMsg}); setRgpdContactOpen(false); setRgpdContactMsg(""); alert("Demande envoyee. Reponse sous 30 jours."); }
@@ -493,7 +478,7 @@ export default function Dashboard() {
     setRgpdError("");
     setRgpdSuccess("");
     try {
-      const res = await backendClient.rgpdExport();
+      await backendClient.rgpdExport();
       setRgpdSuccess("✓ Données exportées avec succès ! Un email contenant le PDF a été envoyé à votre adresse et le fichier a été sauvegardé dans Google Drive.");
       // Refresh status after export
       setTimeout(() => loadRgpdStatus(), 1000);
@@ -525,7 +510,7 @@ export default function Dashboard() {
     setRgpdSuccess("");
     setShowDeleteConfirm(false);
     try {
-      const res = await backendClient.rgpdDelete();
+      await backendClient.rgpdDelete();
       setRgpdSuccess("✓ Compte supprimé avec succès. Redirection...");
       setTimeout(() => {
         supabase.auth.signOut();
@@ -917,13 +902,13 @@ export default function Dashboard() {
               </div>
               <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
                 <div>
-                  <button onClick={handleRgpdExport} disabled={rgpdExporting} style={{...STYLE.btn("primary"),fontSize:"13px",opacity:rgpdExporting?0.6:1}}>
-                    {rgpdExporting?"Generation...":"Telecharger mes donnees (PDF par email)"}
+                  <button onClick={handleRgpdExport} disabled={rgpdLoading} style={{...STYLE.btn("primary"),fontSize:"13px",opacity:rgpdLoading?0.6:1}}>
+                    {rgpdLoading?"Generation...":"Telecharger mes donnees (PDF par email)"}
                   </button>
                   {rgpdStatus?.last_export&&<p style={{fontSize:"11px",color:"#555",marginTop:"6px"}}>Dernier export : {new Date(rgpdStatus.last_export).toLocaleDateString("fr-FR")}</p>}
                 </div>
-                <button onClick={handleRgpdDelete} disabled={rgpdDeleting} style={{...STYLE.btn("secondary"),color:"#cc0000",borderColor:"#cc0000",fontSize:"13px"}}>
-                  {rgpdDeleting?"Suppression...":"Supprimer mes previsions"}
+                <button onClick={handleRgpdDelete} disabled={rgpdLoading} style={{...STYLE.btn("secondary"),color:"#cc0000",borderColor:"#cc0000",fontSize:"13px"}}>
+                  {rgpdLoading?"Suppression...":"Supprimer mes previsions"}
                 </button>
                 <button onClick={()=>setRgpdContactOpen(o=>!o)} style={{...STYLE.btn("secondary"),fontSize:"13px"}}>
                   Contacter le DPO
