@@ -30,7 +30,11 @@ export default function ForgotPassword() {
         redirectTo: window.location.origin + "/reset-password",
       });
       if (error) {
-        setErr(error.message || error.error_description || "Impossible d'envoyer le lien. Vérifiez l'adresse email.");
+        let msg = (error.message || error.error_description || "").trim();
+        if (!msg || msg === "{}" || /^\{[\s\S]*\}$/.test(msg)) {
+          msg = "Impossible d'envoyer le lien pour le moment. Réessayez dans quelques instants ou contactez le support.";
+        }
+        setErr(msg);
       } else {
         setSent(true);
       }
