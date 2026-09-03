@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [rgpdContactMsg, setRgpdContactMsg] = useState("");
   const [showAllPredictions, setShowAllPredictions] = useState(false);
   const [rgpdLoading, setRgpdLoading] = useState(false);
+  const [rgpdHistoryLoading, setRgpdHistoryLoading] = useState(false);
   const [rgpdError, setRgpdError] = useState("");
   const [rgpdSuccess, setRgpdSuccess] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -500,7 +501,7 @@ export default function Dashboard() {
 
   // RGPD: Load export history
   async function loadRgpdStatus() {
-    setRgpdLoading(true);
+    setRgpdHistoryLoading(true);
     setRgpdError("");
     try {
       const res = await backendClient.rgpdStatus();
@@ -508,7 +509,7 @@ export default function Dashboard() {
     } catch (err) {
       setRgpdError(`❌ Erreur lors du chargement de l'historique — ${err.message || "Réessayez."}`);
     } finally {
-      setRgpdLoading(false);
+      setRgpdHistoryLoading(false);
     }
   }
 
@@ -962,10 +963,10 @@ export default function Dashboard() {
               </p>
               <button
                 onClick={loadRgpdStatus}
-                disabled={rgpdLoading}
-                style={{ ...STYLE.btn("secondary"), opacity: rgpdLoading ? 0.6 : 1 }}
+                disabled={rgpdHistoryLoading}
+                style={{ ...STYLE.btn("secondary"), opacity: rgpdHistoryLoading ? 0.6 : 1 }}
               >
-                {rgpdLoading ? "Chargement..." : "Afficher l'historique"}
+                {rgpdHistoryLoading ? "Chargement..." : "Afficher l'historique"}
               </button>
 
               {rgpdStatus && rgpdStatus.exports && rgpdStatus.exports.length > 0 && (
