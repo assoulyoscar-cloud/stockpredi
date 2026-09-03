@@ -474,15 +474,22 @@ export default function Dashboard() {
     }
   }
 
-  // RGPD: Export data
+  // RGPD: Export data — telechargement direct + archive interne (plus d'envoi par email)
   async function handleRgpdExport() {
     setRgpdLoading(true);
     setRgpdError("");
     setRgpdSuccess("");
     try {
-      await backendClient.rgpdExport();
-      setRgpdSuccess("Données exportées avec succès");
-      // Refresh status after export
+      const { blob, filename } = await backendClient.rgpdExport();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename || "mes-donnees-stockpredi.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setRgpdSuccess("Données téléchargées avec succès");
       setTimeout(() => loadRgpdStatus(), 1000);
     } catch (err) {
       setRgpdError(`❌ Erreur lors de l'export — ${err.message || "Réessayez dans quelques instants."}`);
@@ -933,11 +940,11 @@ export default function Dashboard() {
                 Conformément au RGPD (Règlement Général sur la Protection des Données), vous avez le droit de télécharger, modifier ou supprimer vos données personnelles.
               </p>
 
-              <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", marginTop: "20px" }}>
+                            <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", marginTop: "20px" }}>
                 📥 Télécharger mes données
               </h3>
               <p style={{ fontSize: "13px", color: "#555", marginBottom: "12px" }}>
-                Récupérez une copie complète de vos données au format PDF. Le fichier sera envoyé par email et 
+                Récupérez une copie complète de vos données au format PDF, téléchargée directement sur votre appareil. Aucun envoi par email — une copie est archivée de façon sécurisée en interne pour le suivi RGPD.
               </p>
               <button
                 onClick={handleRgpdExport}
