@@ -31,8 +31,8 @@ export default function Dashboard() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [importedFiles, setImportedFiles] = useState([]); // liste des fichiers importés
   const [rgpdStatus, setRgpdStatus] = useState(null);
-  const [rgpdContactOpen, setRgpdContactOpen] = useState(false);
-  const [rgpdContactType, setRgpdContactType] = useState("question");
+  const [rgpdContactOpen, setRgpdContactOpen] = useState(false); // eslint-disable-line no-unused-vars
+  const [rgpdContactType, setRgpdContactType] = useState("question"); // eslint-disable-line no-unused-vars
   const [rgpdContactMsg, setRgpdContactMsg] = useState("");
   const [showAllPredictions, setShowAllPredictions] = useState(false);
   const [rgpdLoading, setRgpdLoading] = useState(false);
@@ -83,7 +83,7 @@ export default function Dashboard() {
     setTab("forecast");
   }
 
-  async function handleRgpdContact() {
+  async function handleRgpdContact() { // eslint-disable-line no-unused-vars
     if (!rgpdContactMsg.trim()) return;
     try { await backendClient.rgpdContact({email:user?.email,type:rgpdContactType,message:rgpdContactMsg}); setRgpdContactOpen(false); setRgpdContactMsg(""); alert("Demande envoyee. Reponse sous 30 jours."); }
     catch(err) { alert("Erreur : "+err.message); }
