@@ -5,17 +5,17 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "https://stockpredi-bac
 async function apiFetch(path, options = {}) {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
-  const res = await fetch(\`\${BACKEND_URL}\${path}\`, {
+  const res = await fetch(BACKEND_URL + path, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: \`Bearer \${token}\` } : {}),
+      ...(token ? { Authorization: "Bearer " + token } : {}),
       ...(options.headers || {}),
     },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err.message || \`Erreur \${res.status}\`);
+    throw new Error(err.message || ("Erreur " + res.status));
   }
   return res.json();
 }
@@ -25,15 +25,15 @@ async function apiFetch(path, options = {}) {
 async function apiFetchBlob(path, options = {}) {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
-  const res = await fetch(\`\${BACKEND_URL}\${path}\`, {
+  const res = await fetch(BACKEND_URL + path, {
     ...options,
     headers: {
-      ...(token ? { Authorization: \`Bearer \${token}\` } : {}),
+      ...(token ? { Authorization: "Bearer " + token } : {}),
       ...(options.headers || {}),
     },
   });
   if (!res.ok) {
-    let message = \`Erreur \${res.status}\`;
+    let message = "Erreur " + res.status;
     try {
       const err = await res.json();
       message = err.message || err.error || message;
