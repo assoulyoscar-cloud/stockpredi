@@ -23,10 +23,10 @@ async function apiFetch(path, options = {}) {
 export const backendClient = {
   subscriptionStatus: () => apiFetch("/api/stripe/status"),
   createSubscription: () => apiFetch("/api/stripe/create-subscription", { method: "POST" }),
-  recommendations: (data, productName, periods, sector) =>
+  recommendations: (data, productName, periods, sector, sectorParams) =>
     apiFetch("/api/predictions/recommendations", {
       method: "POST",
-      body: JSON.stringify({ data, product_name: productName, periods, sector: sector || "general" }),
+      body: JSON.stringify({ data, product_name: productName, periods, sector: sector || "general", sector_params: sectorParams || {} }),
     }),
   rgpdExport:  () => apiFetch("/api/rgpd/export",  { method: "POST" }),
   rgpdDelete:  () => apiFetch("/api/rgpd/delete",  { method: "DELETE" }),
