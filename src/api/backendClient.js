@@ -5,57 +5,30 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "https://stockpredi-bac
 async function apiFetch(path, options = {}) {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
-  const res = await fetch(BACKEND_URL + path, {
+  const res = await fetch(`${BACKEND_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: "Bearer " + token } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err.message || ("Erreur " + res.status));
+    throw new Error(err.message || `Erreur ${res.status}`);
   }
   return res.json();
-}
-
-// Variante pour les endpoints qui renvoient un fichier binaire (PDF...)
-// plutot que du JSON - utilisee pour le telechargement direct RGPD.
-async function apiFetchBlob(path, options = {}) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  const res = await fetch(BACKEND_URL + path, {
-    ...options,
-    headers: {
-      ...(token ? { Authorization: "Bearer " + token } : {}),
-      ...(options.headers || {}),
-    },
-  });
-  if (!res.ok) {
-    let message = "Erreur " + res.status;
-    try {
-      const err = await res.json();
-      message = err.message || err.error || message;
-    } catch {}
-    throw new Error(message);
-  }
-  const blob = await res.blob();
-  const disposition = res.headers.get("Content-Disposition") || "";
-  const match = disposition.match(/filename="?([^"]+)"?/);
-  const filename = match ? match[1] : "export.pdf";
-  return { blob, filename };
 }
 
 export const backendClient = {
   subscriptionStatus: () => apiFetch("/api/stripe/status"),
   createSubscription: () => apiFetch("/api/stripe/create-subscription", { method: "POST" }),
-  recommendations: (data, productName, periods) =>
+  recommendations: (data, productName, periods, sector) =>
     apiFetch("/api/predictions/recommendations", {
       method: "POST",
-      body: JSON.stringify({ data, product_name: productName, periods }),
+      body: JSON.stringify({ data, product_name: productName, periods, sector: sector || "general" }),
     }),
-  rgpdExport:  () => apiFetchBlob("/api/rgpd/export",  { method: "POST" }),
+  rgpdExport:  () => apiFetch("/api/rgpd/export",  { method: "POST" }),
   rgpdDelete:  () => apiFetch("/api/rgpd/delete",  { method: "DELETE" }),
   rgpdStatus:  () => apiFetch("/api/rgpd/status"),
   rgpdContact: (payload) => apiFetch("/api/rgpd/contact", { method: "POST", body: JSON.stringify(payload) }),
