@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [productName, setProductName] = useState("Mon produit");
   const [data, setData] = useState(null); // null = no CSV loaded yet (empty state)
   const [periods, setPeriods] = useState(30);
+  const [sector, setSector] = useState("general");
   const [csvError, setCsvError] = useState("");
   const [subStatus, setSubStatus] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
@@ -31,12 +32,11 @@ export default function Dashboard() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [importedFiles, setImportedFiles] = useState([]); // liste des fichiers importés
   const [rgpdStatus, setRgpdStatus] = useState(null);
-  const [rgpdContactOpen, setRgpdContactOpen] = useState(false); // eslint-disable-line no-unused-vars
-  const [rgpdContactType, setRgpdContactType] = useState("question"); // eslint-disable-line no-unused-vars
+  const [rgpdContactOpen, setRgpdContactOpen] = useState(false);
+  const [rgpdContactType, setRgpdContactType] = useState("question");
   const [rgpdContactMsg, setRgpdContactMsg] = useState("");
   const [showAllPredictions, setShowAllPredictions] = useState(false);
   const [rgpdLoading, setRgpdLoading] = useState(false);
-  const [rgpdHistoryLoading, setRgpdHistoryLoading] = useState(false);
   const [rgpdError, setRgpdError] = useState("");
   const [rgpdSuccess, setRgpdSuccess] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -83,7 +83,7 @@ export default function Dashboard() {
     setTab("forecast");
   }
 
-  async function handleRgpdContact() { // eslint-disable-line no-unused-vars
+  async function handleRgpdContact() {
     if (!rgpdContactMsg.trim()) return;
     try { await backendClient.rgpdContact({email:user?.email,type:rgpdContactType,message:rgpdContactMsg}); setRgpdContactOpen(false); setRgpdContactMsg(""); alert("Demande envoyee. Reponse sous 30 jours."); }
     catch(err) { alert("Erreur : "+err.message); }
@@ -441,16 +441,19 @@ export default function Dashboard() {
     setResult(null);
     setLoading(true);
     setShowAllPredictions(false);
+    const coldStartTimer = setTimeout(() => {
+      setError("\u23F3 Première connexion au serveur — patientez ~30 secondes...");
+    }, 5000);
     try {
       const payload = data || SAMPLE_DATA;
-      const res = await backendClient.recommendations(payload, productName, periods);
+      const res = await backendClient.recommendations(payload, productName, periods, sector);
       setResult(res);
       // Sauvegarde dans l'historique (Supabase direct — pas de dependance backend)
       if (user) {
         const { error: saveErr } = await supabase.from("predictions").insert({
           user_id: user.id,
           filename: productName || "Sans nom",
-          forecast_data: { ...res, product_name: productName, periods, data_points: payload.length }
+          forecast_data: { ...res, product_name: productName, periods, sector, data_points: payload.length }
         });
         if (saveErr) console.error("Sauvegarde historique:", saveErr.message);
         else setHistory(null); // force le rechargement au prochain passage sur l'onglet
@@ -458,6 +461,7 @@ export default function Dashboard() {
     } catch (err) {
       setError(`❌ Prévision impossible — ${err.message || "Erreur serveur. Réessayez dans quelques secondes."}`);
     } finally {
+      clearTimeout(coldStartTimer);
       setLoading(false);
     }
   }
@@ -475,23 +479,33 @@ export default function Dashboard() {
     }
   }
 
-  // RGPD: Export data — telechargement direct + archive interne (plus d'envoi par email)
+  // RGPD: Export data — direct PDF download on PC
   async function handleRgpdExport() {
     setRgpdLoading(true);
     setRgpdError("");
     setRgpdSuccess("");
     try {
-      const { blob, filename } = await backendClient.rgpdExport();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Non authentifié");
+      const BACKEND = process.env.REACT_APP_BACKEND_URL || "https://stockpredi-backend.onrender.com";
+      const res = await fetch(`${BACKEND}/api/rgpd/export`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Erreur serveur (${res.status})`);
+      }
+      const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = filename || "mes-donnees-stockpredi.pdf";
+      a.download = `StockPredi_Export_${new Date().toISOString().slice(0,10)}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      setRgpdSuccess("Données téléchargées avec succès");
-      setTimeout(() => loadRgpdStatus(), 1000);
+      setRgpdSuccess("PDF enregistré sur votre ordinateur ✓");
     } catch (err) {
       setRgpdError(`❌ Erreur lors de l'export — ${err.message || "Réessayez dans quelques instants."}`);
     } finally {
@@ -501,7 +515,7 @@ export default function Dashboard() {
 
   // RGPD: Load export history
   async function loadRgpdStatus() {
-    setRgpdHistoryLoading(true);
+    setRgpdLoading(true);
     setRgpdError("");
     try {
       const res = await backendClient.rgpdStatus();
@@ -509,7 +523,7 @@ export default function Dashboard() {
     } catch (err) {
       setRgpdError(`❌ Erreur lors du chargement de l'historique — ${err.message || "Réessayez."}`);
     } finally {
-      setRgpdHistoryLoading(false);
+      setRgpdLoading(false);
     }
   }
 
@@ -664,6 +678,18 @@ export default function Dashboard() {
                       <option value={90}>90 jours</option>
                     </select>
                   </div>
+                  <div>
+                    <label style={STYLE.label}>Secteur d'activité</label>
+                    <select style={STYLE.input} value={sector} onChange={e => setSector(e.target.value)}>
+                      <option value="general">Général</option>
+                      <option value="restaurant">Restaurant / Traiteur</option>
+                      <option value="epicerie">Épicerie / Alimentation</option>
+                      <option value="boulangerie">Boulangerie / Pâtisserie</option>
+                      <option value="pepiniere">Pépinière / Jardinerie</option>
+                      <option value="boutique">Boutique / Commerce de détail</option>
+                      <option value="bureau_etude">Bureau d'études / Services</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div>
@@ -713,7 +739,7 @@ export default function Dashboard() {
                   <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "4px" }}>
                     Recommandations IA
                     <span style={{ fontSize: "11px", fontWeight: "400", color: "#888", marginLeft: "8px" }}>
-                      via {result.ai_source === "ollama" ? "Llama3.1" : "règles métier"}
+                      via {result.ai_source === "ollama" ? "Llama3.1" : "moteur StockPredi"}
                     </span>
                   </h2>
                   <p style={{ fontSize: "13px", color: "#555", marginBottom: "8px" }}>{result.summary}</p>
@@ -735,7 +761,7 @@ export default function Dashboard() {
                   ))}
                   {result.ai_source !== "ollama" && (
                     <p style={{ fontSize: "11px", color: "#888", marginTop: "12px" }}>
-                      (recommandations basées sur règles métier — IA Llama indisponible)
+                      Recommandations générées par le moteur StockPredi
                     </p>
                   )}
                 </div>
@@ -935,24 +961,24 @@ export default function Dashboard() {
             {/* CONFIDENTIALITÉ & DONNÉES */}
             <div style={STYLE.card}>
               <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "4px" }}>
-                Confidentialité et RGPD
+                Mes données
               </h2>
               <p style={{ fontSize: "13px", color: "#555", marginBottom: "20px" }}>
-                Conformément au RGPD (Règlement Général sur la Protection des Données), vous avez le droit de télécharger, modifier ou supprimer vos données personnelles.
+                Exportez ou supprimez vos données personnelles.
               </p>
 
-                            <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", marginTop: "20px" }}>
-                📥 Télécharger mes données
+              <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", marginTop: "20px" }}>
+                📥 Enregistrer mes données
               </h3>
               <p style={{ fontSize: "13px", color: "#555", marginBottom: "12px" }}>
-                Récupérez une copie complète de vos données au format PDF, téléchargée directement sur votre appareil. Aucun envoi par email — une copie est archivée de façon sécurisée en interne pour le suivi RGPD.
+                Téléchargez une copie complète de vos données au format PDF directement sur votre ordinateur.
               </p>
               <button
                 onClick={handleRgpdExport}
                 disabled={rgpdLoading}
                 style={{ ...STYLE.btn("primary"), opacity: rgpdLoading ? 0.6 : 1 }}
               >
-                {rgpdLoading ? "Préparation..." : "Télécharger mes données"}
+                {rgpdLoading ? "Préparation..." : "Enregistrer sur mon PC"}
               </button>
 
               <h3 style={{ fontSize: "14px", fontWeight: "700", marginBottom: "12px", marginTop: "24px" }}>
@@ -963,10 +989,10 @@ export default function Dashboard() {
               </p>
               <button
                 onClick={loadRgpdStatus}
-                disabled={rgpdHistoryLoading}
-                style={{ ...STYLE.btn("secondary"), opacity: rgpdHistoryLoading ? 0.6 : 1 }}
+                disabled={rgpdLoading}
+                style={{ ...STYLE.btn("secondary"), opacity: rgpdLoading ? 0.6 : 1 }}
               >
-                {rgpdHistoryLoading ? "Chargement..." : "Afficher l'historique"}
+                {rgpdLoading ? "Chargement..." : "Afficher l'historique"}
               </button>
 
               {rgpdStatus && rgpdStatus.exports && rgpdStatus.exports.length > 0 && (
