@@ -8,7 +8,7 @@ from models.recommendations import OllamaRecommender, compute_trend, compute_cv
 predictions_bp = Blueprint("predictions", __name__)
 
 
-def parse_data(raw: list) -> pd.DataFrame:
+def parse_data(raw):
     if not raw or not isinstance(raw, list):
         raise ValueError("data doit etre une liste non vide")
     df = pd.DataFrame(raw)
@@ -24,7 +24,7 @@ def parse_data(raw: list) -> pd.DataFrame:
 
 @predictions_bp.route("/forecast", methods=["POST"])
 @auth_required
-def forecast(user_id: str):
+def forecast():
     try:
         body = request.get_json() or {}
         raw = body.get("data", [])
@@ -41,25 +41,22 @@ def forecast(user_id: str):
 
 @predictions_bp.route("/recommendations", methods=["POST"])
 @auth_required
-def recommendations(user_id: str):
+def recommendations():
     try:
         body = request.get_json() or {}
         raw = body.get("data", [])
         product_name = body.get("product_name", "Mon produit")
         periods = int(body.get("periods", 30))
-
+        sector = body.get("sector", "general")
+        sector_params = body.get("sector_params", {})
         df = parse_data(raw)
-
         model = StockForecast(df)
         forecast_result = model.fit_and_predict(periods=periods)
         accuracy_score = forecast_result.get("accuracy_score", 0)
-
         predictions_list = forecast_result.get("predictions", [])
-        alerts = detect_alerts(predictions_list, df)
-
+        alerts = detect_alerts(predictions_list)
         trend = compute_trend(df)
         cv = compute_cv(df)
-
         recommender = OllamaRecommender()
         context = {
             "product_name": product_name,
@@ -68,9 +65,11 @@ def recommendations(user_id: str):
             "trend": trend,
             "cv": cv,
             "data_points": len(df),
+            "seasonality_context": forecast_result.get("seasonality_context", ""),
+            "sector": sector,
+            "sector_params": sector_params,
         }
         rec_result = recommender.recommend(context)
-
         if accuracy_score < 0.40:
             summary = f"Donnees tres irregulières — precision {accuracy_score:.0%}. Les previsions sont peu fiables. Enrichissez votre historique."
         elif accuracy_score < 0.60:
@@ -79,19 +78,14 @@ def recommendations(user_id: str):
             summary = f"{len(alerts)} alerte(s) detectee(s). Tendance {trend}. Precision {accuracy_score:.0%}."
         else:
             summary = f"0 alerte(s) detectee(s). Tendance {trend}. Precision modele : {accuracy_score:.0%}."
-
         return jsonify({
             "summary": summary,
             "trend": trend,
             "recommendations": rec_result.get("recommendations", []),
             "ai_source": rec_result.get("ai_source", "rules"),
             "alerts": alerts,
-            "forecast": {
-                **forecast_result,
-                "data_points": len(df),
-            },
+            "forecast": {**forecast_result, "data_points": len(df)},
         })
-
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
