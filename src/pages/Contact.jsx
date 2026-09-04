@@ -10,6 +10,8 @@ export default function Contact() {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,9 +20,6 @@ export default function Contact() {
       [name]: value
     }));
   };
-
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
