@@ -26,20 +26,19 @@ export default function ForgotPassword() {
     setLoading(true);
     setErr("");
     try {
+      if (!supabase) { setErr("Service temporairement indisponible. Réessayez dans quelques instants."); return; }
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
         redirectTo: window.location.origin + "/reset-password",
       });
       if (error) {
-        let msg = (error.message || error.error_description || "").trim();
-        if (!msg || msg === "{}" || /^\{[\s\S]*\}$/.test(msg)) {
-          msg = "Impossible d'envoyer le lien pour le moment. Réessayez dans quelques instants ou contactez le support.";
-        }
-        setErr(msg);
+        const msg = typeof error === "string" ? error : (error.message || error.error_description || "");
+        setErr(msg || "Impossible d'envoyer le lien. Vérifiez l'adresse email.");
       } else {
         setSent(true);
       }
     } catch (e) {
-      setErr("Impossible d'envoyer le lien. Réessayez dans quelques instants.");
+      const msg = typeof e === "string" ? e : (e?.message || "");
+      setErr(msg || "Impossible d'envoyer le lien. Réessayez dans quelques instants.");
     } finally {
       setLoading(false);
     }
