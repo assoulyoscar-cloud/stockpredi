@@ -25,6 +25,22 @@ export default function Dashboard() {
   const [data, setData] = useState(null); // null = no CSV loaded yet (empty state)
   const [periods, setPeriods] = useState(30);
   const [sector, setSector] = useState("general");
+  const [sectorParams, setSectorParams] = useState({ perissable: 30, saisonnalite: 50, marge_securite: 20, tolerance_rupture: 30 });
+
+  const SECTOR_PRESETS = {
+    general:       { perissable: 30, saisonnalite: 50, marge_securite: 20, tolerance_rupture: 30 },
+    restaurant:    { perissable: 95, saisonnalite: 70, marge_securite: 15, tolerance_rupture: 10 },
+    epicerie:      { perissable: 75, saisonnalite: 60, marge_securite: 20, tolerance_rupture: 15 },
+    boulangerie:   { perissable: 100, saisonnalite: 65, marge_securite: 10, tolerance_rupture: 5 },
+    pepiniere:     { perissable: 15, saisonnalite: 95, marge_securite: 30, tolerance_rupture: 40 },
+    boutique:      { perissable: 5, saisonnalite: 55, marge_securite: 25, tolerance_rupture: 25 },
+    bureau_etude:  { perissable: 0, saisonnalite: 30, marge_securite: 35, tolerance_rupture: 50 },
+  };
+
+  function handleSectorChange(val) {
+    setSector(val);
+    setSectorParams(SECTOR_PRESETS[val] || SECTOR_PRESETS.general);
+  }
   const [csvError, setCsvError] = useState("");
   const [subStatus, setSubStatus] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
@@ -446,14 +462,14 @@ export default function Dashboard() {
     }, 5000);
     try {
       const payload = data || SAMPLE_DATA;
-      const res = await backendClient.recommendations(payload, productName, periods, sector);
+      const res = await backendClient.recommendations(payload, productName, periods, sector, sectorParams);
       setResult(res);
       // Sauvegarde dans l'historique (Supabase direct — pas de dependance backend)
       if (user) {
         const { error: saveErr } = await supabase.from("predictions").insert({
           user_id: user.id,
           filename: productName || "Sans nom",
-          forecast_data: { ...res, product_name: productName, periods, sector, data_points: payload.length }
+          forecast_data: { ...res, product_name: productName, periods, sector, sector_params: sectorParams, data_points: payload.length }
         });
         if (saveErr) console.error("Sauvegarde historique:", saveErr.message);
         else setHistory(null); // force le rechargement au prochain passage sur l'onglet
@@ -680,7 +696,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <label style={STYLE.label}>Secteur d'activité</label>
-                    <select style={STYLE.input} value={sector} onChange={e => setSector(e.target.value)}>
+                    <select style={STYLE.input} value={sector} onChange={e => handleSectorChange(e.target.value)}>
                       <option value="general">Général</option>
                       <option value="restaurant">Restaurant / Traiteur</option>
                       <option value="epicerie">Épicerie / Alimentation</option>
@@ -691,6 +707,39 @@ export default function Dashboard() {
                     </select>
                   </div>
                 </div>
+
+                {/* Curseurs secteur */}
+                {sector !== "general" && (
+                  <div style={{ border: "1px solid #eee", padding: "16px", marginBottom: "20px" }}>
+                    <p style={{ fontSize: "12px", fontWeight: "700", marginBottom: "12px", color: "#555" }}>
+                      Paramètres métier — ajustez selon votre activité
+                    </p>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      {[
+                        { key: "perissable", label: "Périssabilité", low: "Durable", high: "Très périssable" },
+                        { key: "saisonnalite", label: "Saisonnalité", low: "Stable", high: "Très saisonnier" },
+                        { key: "marge_securite", label: "Marge de sécurité", low: "Juste", high: "Large" },
+                        { key: "tolerance_rupture", label: "Tolérance rupture", low: "Zéro rupture", high: "Flexible" },
+                      ].map(({ key, label, low, high }) => (
+                        <div key={key}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "4px" }}>
+                            <span style={{ fontWeight: "700" }}>{label}</span>
+                            <span style={{ color: "#888" }}>{sectorParams[key]}%</span>
+                          </div>
+                          <input
+                            type="range" min="0" max="100" value={sectorParams[key]}
+                            onChange={e => setSectorParams(p => ({ ...p, [key]: Number(e.target.value) }))}
+                            style={{ width: "100%", accentColor: "#000" }}
+                          />
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#aaa" }}>
+                            <span>{low}</span>
+                            <span>{high}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label style={STYLE.label}>Fichier CSV</label>
