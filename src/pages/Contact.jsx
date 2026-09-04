@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { captureEmail } from '../api/supabaseClient';
+import { supabase } from '../api/supabaseClient';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -19,18 +19,31 @@ export default function Contact() {
     }));
   };
 
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO AOÛT : Valider + sanitizer côté serveur (actuellement frontend only)
-    const result = await captureEmail(formData.email, 'contact');
-    if (result.success || true) {
-      // On affiche succès même si capture échoue (UX) — log l'erreur
-      if (!result.success) console.error('Email capture failed:', result.error);
+    setError('');
+    setLoading(true);
+    try {
+      const { error: dbErr } = await supabase.from('contact_messages').insert({
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        subject: formData.subject,
+        message: formData.message.trim(),
+      });
+      if (dbErr) throw dbErr;
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
         setFormData({ name: '', email: '', subject: '', message: '' });
-      }, 3000);
+      }, 4000);
+    } catch (err) {
+      setError('Erreur lors de l\'envoi. Contactez directement contact@stockpredi.fr');
+      console.error('Contact form error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -194,12 +207,17 @@ export default function Contact() {
             onMouseEnter={(e) => { e.target.style.background = '#FFFFFF'; e.target.style.color = '#000000'; }}
             onMouseLeave={(e) => { e.target.style.background = '#000000'; e.target.style.color = '#FFFFFF'; }}
             >
-              ENVOYER
+              {loading ? 'ENVOI...' : 'ENVOYER'}
             </button>
 
             {submitted && (
-              <p style={{ fontSize: '14px', color: '#333333', marginTop: '12px', textAlign: 'center' }}>
-                ✓ Message reçu. Nous vous répondrons sous 4h.
+              <p style={{ fontSize: '14px', color: '#006600', marginTop: '12px', textAlign: 'center' }}>
+                ✓ Message envoyé. Nous vous répondrons sous 4h.
+              </p>
+            )}
+            {error && (
+              <p style={{ fontSize: '14px', color: '#cc0000', marginTop: '12px', textAlign: 'center' }}>
+                ❌ {error}
               </p>
             )}
           </form>
