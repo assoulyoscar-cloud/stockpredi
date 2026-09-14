@@ -55,3 +55,10 @@ def get_predictions():
         return jsonify({"predictions": res.data or []}), 200
     except Exception as e:
         return jsonify({"error": "Erreur chargement", "detail": str(e)}), 500
+
+
+@user_bp.route("/export", methods=["GET"])
+@auth_required
+def export_data():
+    """Export endpoint placeholder."""
+    return jsonify({"message": "Export endpoint"}), 200
