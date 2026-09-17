@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { supabase } from "../api/supabaseClient";
 import { Link } from "react-router-dom";
+
+const API_URL = process.env.REACT_APP_API_URL || "https://stockpredi-backend.onrender.com";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -22,23 +23,31 @@ export default function ForgotPassword() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!email.trim()) { setErr("Veuillez saisir votre adresse email."); return; }
+    if (!email.trim()) {
+      setErr("Veuillez saisir votre adresse email.");
+      return;
+    }
+    
     setLoading(true);
     setErr("");
+    
     try {
-      if (!supabase) { setErr("Service temporairement indisponible. Réessayez dans quelques instants."); return; }
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-        redirectTo: window.location.origin + "/reset-password",
+      const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
-      if (error) {
-        const msg = typeof error === "string" ? error : (error.message || error.error_description || "");
-        setErr(msg || "Impossible d'envoyer le lien. Vérifiez l'adresse email.");
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErr(data.error || "Impossible d'envoyer le lien. Vérifiez l'adresse email.");
       } else {
         setSent(true);
       }
     } catch (e) {
       const msg = typeof e === "string" ? e : (e?.message || "");
-      setErr(msg || "Impossible d'envoyer le lien. Réessayez dans quelques instants.");
+      setErr(msg || "Impossible d'envoyer le lien. Vérifiez votre connexion internet.");
     } finally {
       setLoading(false);
     }
