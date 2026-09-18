@@ -1,15 +1,12 @@
--- PHASE 4 P1: F&B Monetization Schema
+-- PHASE 4 P1: F&B Monetization Schema (Simplified - Single Tier)
 -- Generated: 2026-09-18
 
 -- 1. Extend users table with subscription fields
 ALTER TABLE users ADD COLUMN IF NOT EXISTS (
-  stripe_subscription_tier VARCHAR(20) DEFAULT 'free',
   stripe_subscription_id VARCHAR(255),
   stripe_subscription_status VARCHAR(20),
   subscription_started_at TIMESTAMP,
-  subscription_ended_at TIMESTAMP,
-  forecast_limit_monthly INT DEFAULT 1,
-  forecast_reset_date DATE
+  subscription_ended_at TIMESTAMP
 );
 
 -- 2. Forecast usage tracking
@@ -28,8 +25,6 @@ CREATE TABLE IF NOT EXISTS subscription_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   event_type VARCHAR(50),
-  from_tier VARCHAR(20),
-  to_tier VARCHAR(20),
   event_date TIMESTAMP DEFAULT NOW(),
   metadata JSONB
 );
@@ -64,6 +59,5 @@ CREATE POLICY "Service role can manage subscription_logs" ON subscription_logs
 
 COMMENT ON TABLE forecast_usage IS 'Track daily forecast API usage per user';
 COMMENT ON TABLE subscription_logs IS 'Audit log for subscription changes';
-COMMENT ON COLUMN users.stripe_subscription_tier IS 'free|pro|enterprise';
-COMMENT ON COLUMN users.forecast_limit_monthly IS 'Monthly forecast API limit (free=1, pro=10, enterprise=999)';
-
+COMMENT ON COLUMN users.stripe_subscription_id IS 'Stripe subscription ID';
+COMMENT ON COLUMN users.stripe_subscription_status IS 'active|past_due|canceled';
