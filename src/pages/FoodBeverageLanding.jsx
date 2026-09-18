@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../api/supabaseClient';
 import './Landing.css';
 
 export default function FoodBeverageLanding() {
