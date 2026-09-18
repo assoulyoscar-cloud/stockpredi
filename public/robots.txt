@@ -1,0 +1,14 @@
+# StockPredi robots.txt
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+Disallow: /reset-password
+Disallow: /auth
+
+# Crawl-delay in seconds
+Crawl-delay: 1
+
+# Sitemap reference
+Sitemap: https://stockpredi.vercel.app/sitemap.xml

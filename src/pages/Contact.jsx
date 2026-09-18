@@ -1,50 +1,44 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../api/supabaseClient';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { validateContactForm } from '../utils/validators';
 
 export default function Contact() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
-  });
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitCooldown, setSubmitCooldown] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      const { error: dbErr } = await supabase.from('contact_messages').insert({
-        name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
-        subject: formData.subject,
-        message: formData.message.trim(),
-      });
-      if (dbErr) throw dbErr;
-      setSubmitted(true);
-      setTimeout(() => {
-        setSubmitted(false);
-        setFormData({ name: '', email: '', subject: '', message: '' });
-      }, 4000);
-    } catch (err) {
-      setError('Erreur lors de l\'envoi. Contactez directement contact@stockpredi.fr');
-      console.error('Contact form error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const form = useFormValidation(
+    { name: '', email: '', subject: '', message: '' },
+    async (values) => {
+      setSubmitError('');
+      try {
+        const { error: dbErr } = await supabase.from('contact_messages').insert({
+          name: values.name.trim(),
+          email: values.email.trim().toLowerCase(),
+          subject: values.subject,
+          message: values.message.trim(),
+        });
+        if (dbErr) throw dbErr;
+        setSubmitted(true);
+        setTimeout(() => {
+          setSubmitted(false);
+          form.values.name = '';
+          form.values.email = '';
+          form.values.subject = '';
+          form.values.message = '';
+        }, 4000);
+      } catch (err) {
+        setSubmitError('Erreur lors de l\'envoi. Contactez directement contact@stockpredi.fr');
+        console.error('Contact form error:', err);
+        // Anti-spam: cooldown
+        setSubmitCooldown(true);
+        setTimeout(() => setSubmitCooldown(false), 2000);
+      }
+    },
+    validateContactForm
+  );
 
   return (
     <div style={{ fontFamily: 'Courier New, monospace', color: '#000000', backgroundColor: '#FFFFFF' }}>
@@ -95,7 +89,7 @@ export default function Contact() {
             Formulaire de contact
           </h2>
 
-          <form onSubmit={handleSubmit} style={{ marginBottom: '32px' }}>
+          <form onSubmit={form.handleSubmit} style={{ marginBottom: '32px' }}>
             
             <div style={{ marginBottom: '16px' }}>
               <label style={{ fontSize: '14px', fontWeight: '700', display: 'block', marginBottom: '8px' }}>
@@ -104,12 +98,12 @@ export default function Contact() {
               <input
                 type="text"
                 name="name"
-                required
-                value={formData.name}
-                onChange={handleChange}
+                value={form.values.name}
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
                 style={{
                   width: '100%',
-                  border: '1px solid #000000',
+                  border: form.errors.name && form.touched.name ? '1px solid #cc0000' : '1px solid #000000',
                   padding: '10px 12px',
                   fontSize: '14px',
                   fontFamily: 'Courier New, monospace',
@@ -117,6 +111,11 @@ export default function Contact() {
                   boxSizing: 'border-box'
                 }}
               />
+              {form.errors.name && form.touched.name && (
+                <p style={{ fontSize: '12px', color: '#cc0000', margin: '4px 0 0 0' }}>
+                  {form.errors.name}
+                </p>
+              )}
             </div>
 
             <div style={{ marginBottom: '16px' }}>
@@ -126,12 +125,12 @@ export default function Contact() {
               <input
                 type="email"
                 name="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
+                value={form.values.email}
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
                 style={{
                   width: '100%',
-                  border: '1px solid #000000',
+                  border: form.errors.email && form.touched.email ? '1px solid #cc0000' : '1px solid #000000',
                   padding: '10px 12px',
                   fontSize: '14px',
                   fontFamily: 'Courier New, monospace',
@@ -139,6 +138,11 @@ export default function Contact() {
                   boxSizing: 'border-box'
                 }}
               />
+              {form.errors.email && form.touched.email && (
+                <p style={{ fontSize: '12px', color: '#cc0000', margin: '4px 0 0 0' }}>
+                  {form.errors.email}
+                </p>
+              )}
             </div>
 
             <div style={{ marginBottom: '16px' }}>
@@ -147,12 +151,12 @@ export default function Contact() {
               </label>
               <select
                 name="subject"
-                required
-                value={formData.subject}
-                onChange={handleChange}
+                value={form.values.subject}
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
                 style={{
                   width: '100%',
-                  border: '1px solid #000000',
+                  border: form.errors.subject && form.touched.subject ? '1px solid #cc0000' : '1px solid #000000',
                   padding: '10px 12px',
                   fontSize: '14px',
                   fontFamily: 'Courier New, monospace',
@@ -169,6 +173,11 @@ export default function Contact() {
                 <option value="partnership">Partenariat</option>
                 <option value="other">Autre</option>
               </select>
+              {form.errors.subject && form.touched.subject && (
+                <p style={{ fontSize: '12px', color: '#cc0000', margin: '4px 0 0 0' }}>
+                  {form.errors.subject}
+                </p>
+              )}
             </div>
 
             <div style={{ marginBottom: '16px' }}>
@@ -177,12 +186,12 @@ export default function Contact() {
               </label>
               <textarea
                 name="message"
-                required
-                value={formData.message}
-                onChange={handleChange}
+                value={form.values.message}
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
                 style={{
                   width: '100%',
-                  border: '1px solid #000000',
+                  border: form.errors.message && form.touched.message ? '1px solid #cc0000' : '1px solid #000000',
                   padding: '12px',
                   fontSize: '14px',
                   fontFamily: 'Courier New, monospace',
@@ -190,33 +199,51 @@ export default function Contact() {
                   boxSizing: 'border-box'
                 }}
               />
+              {form.errors.message && form.touched.message && (
+                <p style={{ fontSize: '12px', color: '#cc0000', margin: '4px 0 0 0' }}>
+                  {form.errors.message}
+                </p>
+              )}
             </div>
 
-            <button type="submit" style={{
-              background: '#000000',
-              color: '#FFFFFF',
-              border: '2px solid #000000',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              transition: 'all 200ms ease',
-              width: '100%'
-            }}
-            onMouseEnter={(e) => { e.target.style.background = '#FFFFFF'; e.target.style.color = '#000000'; }}
-            onMouseLeave={(e) => { e.target.style.background = '#000000'; e.target.style.color = '#FFFFFF'; }}
+            {submitError && (
+              <p style={{ fontSize: '14px', color: '#cc0000', marginBottom: '12px', textAlign: 'center' }}>
+                ❌ {submitError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={form.isSubmitting || submitCooldown || Object.keys(form.errors).length > 0}
+              style={{
+                background: '#000000',
+                color: '#FFFFFF',
+                border: '2px solid #000000',
+                padding: '12px 24px',
+                fontSize: '14px',
+                fontWeight: '700',
+                cursor: form.isSubmitting || submitCooldown || Object.keys(form.errors).length > 0 ? 'not-allowed' : 'pointer',
+                transition: 'all 200ms ease',
+                width: '100%',
+                opacity: form.isSubmitting || submitCooldown || Object.keys(form.errors).length > 0 ? 0.6 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!form.isSubmitting && !submitCooldown && Object.keys(form.errors).length === 0) {
+                  e.target.style.background = '#FFFFFF';
+                  e.target.style.color = '#000000';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#000000';
+                e.target.style.color = '#FFFFFF';
+              }}
             >
-              {loading ? 'ENVOI...' : 'ENVOYER'}
+              {form.isSubmitting ? 'ENVOI...' : 'ENVOYER'}
             </button>
 
             {submitted && (
               <p style={{ fontSize: '14px', color: '#006600', marginTop: '12px', textAlign: 'center' }}>
                 ✓ Message envoyé. Nous vous répondrons sous 4h.
-              </p>
-            )}
-            {error && (
-              <p style={{ fontSize: '14px', color: '#cc0000', marginTop: '12px', textAlign: 'center' }}>
-                ❌ {error}
               </p>
             )}
           </form>
