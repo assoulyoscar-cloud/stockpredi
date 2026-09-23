@@ -37,7 +37,7 @@ export default function MentionsLegales() {
             <strong>Raison sociale :</strong> StockPredi (Micro-entreprise)<br />
             <strong>Gérant :</strong> Oscar Assouly<br />
             <strong>Adresse :</strong> 94 rue de l'Ourcq, 75019 Paris, France<br />
-            <strong>SIRET :</strong> [À compléter après création micro-entreprise]<br />
+            <strong>SIRET :</strong> En cours d'immatriculation auprès de l'URSSAF<br />
             <strong>Email :</strong> assouly.oscar@gmail.com
           </p>
 
