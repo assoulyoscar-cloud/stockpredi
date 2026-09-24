@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+﻿from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -12,7 +12,7 @@ from routes.subscriptions import subscriptions_bp
 def create_app():
     app = Flask(__name__)
 
-    # CORS — frontend uniquement
+    # CORS â€” frontend uniquement
     CORS(app, origins=[Config.FRONTEND_URL, "http://localhost:3000"],
          supports_credentials=True,
          allow_headers=["Content-Type", "Authorization"],
@@ -63,3 +63,4 @@ app = create_app()
 
 if __name__ == "__main__":
     app.run(debug=(Config.FLASK_ENV == "development"), host="0.0.0.0", port=5000)
+
