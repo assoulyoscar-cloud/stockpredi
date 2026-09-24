@@ -7,7 +7,7 @@ import { useState } from "react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
+  const [error] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitCooldown, setSubmitCooldown] = useState(false);
 

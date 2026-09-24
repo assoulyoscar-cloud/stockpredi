@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../api/supabaseClient';
-import './Landing.css';
+import { backendClient } from '../api/backendClient';
 
 export default function FoodBeverageLanding() {
   const [roiData, setRoiData] = useState({
@@ -37,29 +37,13 @@ export default function FoodBeverageLanding() {
       }
 
       setLoading(true);
-      const token = session.access_token;
 
-      // Call backend to create checkout session
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL || 'https://stockpredi-backend.onrender.com'}/api/subscriptions/create-session`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      const data = await response.json();
-      if (response.ok) {
-        window.location.href = data.checkout_url;
-      } else {
-        alert(`Erreur: ${data.error}`);
-      }
+      // Même endpoint que le Dashboard : /api/stripe/create-subscription
+      const data = await backendClient.createSubscription();
+      window.location.href = data.checkout_url;
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Erreur lors de la création du paiement');
+      alert(`Erreur lors de la création du paiement : ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -135,11 +119,11 @@ export default function FoodBeverageLanding() {
           </div>
           <div style={styles.resultBox}>
             <p style={styles.resultLabel}>Économies potentielles (25% réduction)</p>
-            <p style={styles.resultValue} style={{ color: '#27ae60' }}>€{roi.wasteReduction.toFixed(0)}</p>
+            <p style={{ ...styles.resultValue, color: '#27ae60' }}>€{roi.wasteReduction.toFixed(0)}</p>
           </div>
           <div style={styles.resultBox}>
             <p style={styles.resultLabel}>ROI Année 1 (après €{roi.costPerYear.toFixed(0)} abonnement)</p>
-            <p style={styles.resultValue} style={{ color: '#e74c3c', fontSize: '1.8em' }}>€{roi.netROI.toFixed(0)}</p>
+            <p style={{ ...styles.resultValue, color: '#e74c3c', fontSize: '1.8em' }}>€{roi.netROI.toFixed(0)}</p>
           </div>
           <div style={styles.resultBox}>
             <p style={styles.resultLabel}>Retour sur investissement</p>
@@ -172,7 +156,7 @@ export default function FoodBeverageLanding() {
           <p style={styles.caseDetail}>
             <strong>Après StockPredi (3 mois):</strong> 8% gaspillage, €6,400/an perdu
           </p>
-          <p style={styles.caseDetail} style={{ color: '#27ae60' }}>
+          <p style={{ ...styles.caseDetail, color: '#27ae60' }}>
             <strong>Résultat:</strong> €3,200/an d'économies • ROI: 2 mois
           </p>
         </div>

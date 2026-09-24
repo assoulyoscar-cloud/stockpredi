@@ -1,4 +1,4 @@
-﻿export const SECTOR_CONFIGS = {
+export const SECTOR_CONFIGS = {
   restaurant: { id: 'restaurant', label: '🍽️ Restaurant', icon: '🍽️', color: '#E74C3C', perissable_pct: 95, saisonnalite_pct: 75, marge_securite_pct: 12, seasonal_hiring_months: [5, 6, 7, 8, 11, 12], vacation_risk_months: [7, 8], base_staff: 15, ai_context: 'Congés staff juillet/août -40%. Mariages juin +80%. Noël peak. Périssables = zéro surplus.' },
   boulangerie: { id: 'boulangerie', label: '🥐 Boulangerie', icon: '🥐', color: '#F39C12', perissable_pct: 100, saisonnalite_pct: 70, marge_securite_pct: 5, seasonal_hiring_months: [3, 4, 11, 12], vacation_risk_months: [7, 8], base_staff: 6, ai_context: 'Production jour-même. Pâques & Noël +100%. Congés = fermeture complète.' },
   epicerie: { id: 'epicerie', label: '🥬 Épicerie', icon: '🥬', color: '#27AE60', perissable_pct: 60, saisonnalite_pct: 65, marge_securite_pct: 20, seasonal_hiring_months: [6, 7, 8, 11, 12], vacation_risk_months: [8], base_staff: 8, ai_context: 'Fruits périssables 1-2 sem. Fêtes = stocks massifs. Cycles éco = impact direct prix.' },

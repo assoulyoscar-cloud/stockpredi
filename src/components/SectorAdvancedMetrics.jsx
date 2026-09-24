@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { getSectorConfig } from '../config/sectorConfig';
 
 export function SectorAdvancedMetrics({ sector }) {

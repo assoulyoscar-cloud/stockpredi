@@ -15,7 +15,7 @@ async function apiFetch(path, options = {}) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err.message || `Erreur ${res.status}`);
+    throw new Error(err.error || err.message || `Erreur ${res.status}`);
   }
   return res.json();
 }
