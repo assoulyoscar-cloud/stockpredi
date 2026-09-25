@@ -130,7 +130,7 @@ export default function ResetPassword() {
       </nav>
 
       <div style={{ maxWidth: "400px", margin: "80px auto", padding: "32px" }}>
-        <h1 style={{ fontSize: "28px", fontWeight: "700", marginBottom: "32px" }}>Réinitialiser le mot de passe</h1>
+        <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "32px" }}>Réinitialiser le mot de passe</h1>
 
         {checkingToken ? (
           <p style={{ fontSize: "14px", color: "#555" }}>Vérification du lien...</p>

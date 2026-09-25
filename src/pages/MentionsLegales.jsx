@@ -24,13 +24,13 @@ export default function MentionsLegales() {
       {/* CONTAINER */}
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px' }}>
         
-        <h1 style={{ fontSize: '32px', fontWeight: '700', lineHeight: '1.2', marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', lineHeight: '1.2', marginBottom: '32px' }}>
           Mentions légales
         </h1>
 
-        <div style={{ fontSize: '16px', lineHeight: '1.6', color: '#000000' }}>
+        <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#000000' }}>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             Éditeur du site
           </h2>
           <p>
@@ -41,7 +41,7 @@ export default function MentionsLegales() {
             <strong>Email :</strong> assouly.oscar@gmail.com
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             Hébergement
           </h2>
           <p>
@@ -50,7 +50,7 @@ export default function MentionsLegales() {
             <strong>Localisation data :</strong> Union européenne
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             Propriété intellectuelle
           </h2>
           <p>
@@ -59,7 +59,7 @@ export default function MentionsLegales() {
             Reproduction, modification ou utilisation sans autorisation écrite est interdite.
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             Limitation de responsabilité
           </h2>
           <p>
@@ -69,28 +69,28 @@ export default function MentionsLegales() {
             — Dommages indirects liés à l'utilisation du service
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             Cookies
           </h2>
           <p>
             Ce site n'utilise que les cookies essentiels (session, préférences utilisateur). Voir Politique de confidentialité.
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             Modifications
           </h2>
           <p>
             StockPredi se réserve le droit de modifier ces mentions légales à tout moment. Les modifications entrent en vigueur immédiatement.
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             Droit applicable
           </h2>
           <p>
             Ces mentions légales sont régies par le droit français. En cas de litige, compétence aux tribunaux français.
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             Conformité EU AI Act 2024
           </h2>
           <p>
@@ -104,12 +104,12 @@ export default function MentionsLegales() {
             StockPredi certifie sa conformité à l'EU AI Act du 13 juin 2024 pour les systèmes à risque minimal.
           </p>
 
-          <p style={{ marginTop: '48px', fontSize: '14px', color: '#333333' }}>
+          <p style={{ marginTop: '48px', fontSize: '14px', color: '#555555' }}>
             Dernière mise à jour : juillet 2026
           </p>
 
           <div style={{ borderTop: '1px solid #000000', marginTop: '48px', paddingTop: '24px' }}>
-            <p style={{ fontSize: '14px', color: '#333333', marginBottom: '8px' }}>Pages légales</p>
+            <p style={{ fontSize: '14px', color: '#555555', marginBottom: '8px' }}>Pages légales</p>
             <p style={{ fontSize: '14px' }}>
               <Link to="/" style={{ textDecoration: 'underline', color: '#000000' }}>← Accueil</Link>
               {' · '}

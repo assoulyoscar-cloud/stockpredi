@@ -59,10 +59,10 @@ export default function Signup() {
         }}
       >
         <div style={{ textAlign: "center", maxWidth: "400px", padding: "32px" }}>
-          <h1 style={{ fontSize: "28px", fontWeight: "700", marginBottom: "16px" }}>
+          <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "16px" }}>
             Compte créé ✓
           </h1>
-          <p style={{ fontSize: "16px", lineHeight: "1.6", color: "#333" }}>
+          <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#555" }}>
             Un email de confirmation a été envoyé à <strong>{form.values.email}</strong>.
             <br />
             Cliquez sur le lien pour activer votre compte.
@@ -137,7 +137,7 @@ export default function Signup() {
       <div style={{ maxWidth: "400px", margin: "80px auto", padding: "32px" }}>
         <h1
           style={{
-            fontSize: "28px",
+            fontSize: "24px",
             fontWeight: "700",
             marginBottom: "8px",
           }}

@@ -24,13 +24,13 @@ export default function ConditionsUtilisation() {
       {/* CONTAINER */}
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px' }}>
         
-        <h1 style={{ fontSize: '32px', fontWeight: '700', lineHeight: '1.2', marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', lineHeight: '1.2', marginBottom: '32px' }}>
           Conditions générales d'utilisation
         </h1>
 
-        <div style={{ fontSize: '16px', lineHeight: '1.6', color: '#000000' }}>
+        <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#000000' }}>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             1. Objet du service
           </h2>
           <p>
@@ -41,7 +41,7 @@ export default function ConditionsUtilisation() {
             <strong>Renouvellement :</strong> Automatique après expiration trial
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             2. Responsabilités de l'utilisateur
           </h2>
           <p>
@@ -60,7 +60,7 @@ export default function ConditionsUtilisation() {
             — Utilisation à des fins discriminatoires
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             3. Responsabilités de StockPredi
           </h2>
           <p>
@@ -73,7 +73,7 @@ export default function ConditionsUtilisation() {
             <li>Confidentialité des données</li>
           </ul>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             4. Limitation de responsabilité
           </h2>
           <p>
@@ -89,7 +89,7 @@ export default function ConditionsUtilisation() {
             <strong>Plafond :</strong> Remboursement maximal = 1 mois d'abonnement
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             5. Résiliation et remboursement
           </h2>
           <p>
@@ -98,21 +98,21 @@ export default function ConditionsUtilisation() {
             — <strong>Après résiliation :</strong> Accès coupé immédiatement. Données supprimées sous 30 jours.
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             6. Modifications des CGU
           </h2>
           <p>
             StockPredi peut modifier ces conditions à tout moment. Les modifications entrent en vigueur 30 jours après notification (email).
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             7. Droit applicable
           </h2>
           <p>
             Ces CGU sont régies par le droit français. En cas de litige, compétence exclusive aux tribunaux français.
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             8. Contact
           </h2>
           <p>
@@ -120,12 +120,12 @@ export default function ConditionsUtilisation() {
             <strong>contact@stockpredi.fr</strong>
           </p>
 
-          <p style={{ marginTop: '48px', fontSize: '14px', color: '#333333' }}>
+          <p style={{ marginTop: '48px', fontSize: '14px', color: '#555555' }}>
             Dernière mise à jour : juin 2026
           </p>
 
           <div style={{ borderTop: '1px solid #000000', marginTop: '48px', paddingTop: '24px' }}>
-            <p style={{ fontSize: '14px', color: '#333333', marginBottom: '8px' }}>Pages légales</p>
+            <p style={{ fontSize: '14px', color: '#555555', marginBottom: '8px' }}>Pages légales</p>
             <p style={{ fontSize: '14px' }}>
               <Link to="/" style={{ textDecoration: 'underline', color: '#000000' }}>← Accueil</Link>
               {' · '}

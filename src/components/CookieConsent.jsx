@@ -65,7 +65,6 @@ export default function CookieConsent() {
             fontFamily: 'Courier New, monospace',
             fontWeight: '700',
             fontSize: '14px',
-            borderRadius: '2px',
             transition: 'all 0.2s'
           }}
           onMouseOver={(e) => e.target.style.opacity = '0.8'}
@@ -85,7 +84,6 @@ export default function CookieConsent() {
             fontFamily: 'Courier New, monospace',
             fontWeight: '700',
             fontSize: '14px',
-            borderRadius: '2px',
             transition: 'all 0.2s'
           }}
           onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}

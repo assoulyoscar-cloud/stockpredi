@@ -55,7 +55,7 @@ const STYLE = {
   },
   badge: {
     color: "#888",
-    fontSize: "10px",
+    fontSize: "11px",
     border: "1px solid #444",
     padding: "2px 8px",
   },

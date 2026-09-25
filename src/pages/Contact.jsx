@@ -57,13 +57,13 @@ export default function Contact() {
       {/* CONTAINER */}
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px' }}>
         
-        <h1 style={{ fontSize: '32px', fontWeight: '700', lineHeight: '1.2', marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', lineHeight: '1.2', marginBottom: '32px' }}>
           Contact & Support
         </h1>
 
-        <div style={{ fontSize: '16px', lineHeight: '1.6', color: '#000000' }}>
+        <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#000000' }}>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '24px' }}>
             Besoin d'aide ?
           </h2>
 
@@ -74,13 +74,13 @@ export default function Contact() {
                 contact@stockpredi.fr
               </a>
             </p>
-            <p style={{ fontSize: '12px', color: '#333333', margin: '8px 0 0 0' }}>
+            <p style={{ fontSize: '12px', color: '#555555', margin: '8px 0 0 0' }}>
               Réponse garantie &lt;4h (jours ouvrables)
             </p>
           </div>
 
           {/* FORMULAIRE CONTACT */}
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '24px' }}>
             Formulaire de contact
           </h2>
 
@@ -244,7 +244,7 @@ export default function Contact() {
           </form>
 
           {/* FAQ RAPIDE */}
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '24px' }}>
             Questions fréquentes
           </h2>
 
@@ -252,35 +252,35 @@ export default function Contact() {
             
             <div style={{ border: '1px solid #000000', padding: '24px' }}>
               <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Quel est le temps de réponse au support ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>
+              <p style={{ fontSize: '14px', color: '#555555', margin: 0 }}>
                 Email répondu en &lt;4h (jours ouvrables). Chat en temps réel futur.
               </p>
             </div>
 
             <div style={{ border: '1px solid #000000', padding: '24px' }}>
               <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Je veux annuler mon abonnement. Comment ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>
+              <p style={{ fontSize: '14px', color: '#555555', margin: 0 }}>
                 Contactez support@stockpredi.fr ou accédez à "Paramètres → Abonnement → Annuler".
               </p>
             </div>
 
             <div style={{ border: '1px solid #000000', padding: '24px' }}>
               <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Où sont hébergées mes données ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>
+              <p style={{ fontSize: '14px', color: '#555555', margin: 0 }}>
                 Union européenne (Supabase). RGPD conforme. Voir Politique de confidentialité.
               </p>
             </div>
 
             <div style={{ border: '1px solid #000000', padding: '24px' }}>
               <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Puis-je exporter mes données ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>
+              <p style={{ fontSize: '14px', color: '#555555', margin: 0 }}>
                 Oui. Droit de portabilité RGPD : contact@stockpredi.fr avec demande écrite.
               </p>
             </div>
 
             <div style={{ border: '1px solid #000000', padding: '24px' }}>
               <p style={{ fontSize: '14px', fontWeight: '700', marginBottom: '8px' }}>Je souhaite un partenariat. Qui contacter ?</p>
-              <p style={{ fontSize: '14px', color: '#333333', margin: 0 }}>
+              <p style={{ fontSize: '14px', color: '#555555', margin: 0 }}>
                 Écrivez à contact@stockpredi.fr avec sujet "Partenariat".
               </p>
             </div>
@@ -288,7 +288,7 @@ export default function Contact() {
           </div>
 
           {/* RESSOURCES */}
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '48px', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '48px', marginBottom: '24px' }}>
             Ressources
           </h2>
 

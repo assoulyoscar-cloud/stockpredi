@@ -730,7 +730,7 @@ export default function Dashboard() {
                           onChange={e => setSectorParams(p => ({ ...p, [key]: Number(e.target.value) }))}
                           style={{ width: "100%", accentColor: "#000" }}
                         />
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#aaa" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#aaa" }}>
                           <span>{low}</span>
                           <span>{high}</span>
                         </div>
@@ -748,7 +748,7 @@ export default function Dashboard() {
             {!data && !result && (
               <div style={STYLE.emptyState}>
                 <div style={{ fontSize: "40px", marginBottom: "16px" }}>📁</div>
-                <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "8px", color: "#000" }}>
+                <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "8px", color: "#000" }}>
                   Aucune prévision pour l'instant
                 </h2>
                 <p style={{ fontSize: "14px", marginBottom: "24px" }}>

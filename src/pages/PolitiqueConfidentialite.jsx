@@ -24,13 +24,13 @@ export default function PolitiqueConfidentialite() {
       {/* CONTAINER */}
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px' }}>
         
-        <h1 style={{ fontSize: '32px', fontWeight: '700', lineHeight: '1.2', marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', lineHeight: '1.2', marginBottom: '32px' }}>
           Politique de confidentialité
         </h1>
 
-        <div style={{ fontSize: '16px', lineHeight: '1.6', color: '#000000' }}>
+        <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#000000' }}>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             1. Données collectées
           </h2>
           <p>
@@ -43,7 +43,7 @@ export default function PolitiqueConfidentialite() {
             <li>Adresse IP et user-agent (analytics)</li>
           </ul>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             2. Utilisation des données
           </h2>
           <p>
@@ -59,7 +59,7 @@ export default function PolitiqueConfidentialite() {
             <strong>Nous ne revendons jamais vos données à des tiers.</strong>
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             3. Stockage et sécurité
           </h2>
           <p>
@@ -70,7 +70,7 @@ export default function PolitiqueConfidentialite() {
             — Audit de sécurité annuel
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             4. Vos droits RGPD
           </h2>
           <p>
@@ -87,7 +87,7 @@ export default function PolitiqueConfidentialite() {
             Pour exercer ces droits, contactez : <strong>contact@stockpredi.fr</strong>
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             5. Durée de conservation
           </h2>
           <p>
@@ -97,7 +97,7 @@ export default function PolitiqueConfidentialite() {
             — <strong>Après résiliation :</strong> Suppression complète sur demande
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             6. Cookies
           </h2>
           <p>
@@ -111,7 +111,7 @@ export default function PolitiqueConfidentialite() {
             Pas de cookies de suivi tiers. Vous pouvez refuser les cookies optionnels.
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             7. Contact DPO
           </h2>
           <p>
@@ -119,19 +119,19 @@ export default function PolitiqueConfidentialite() {
             <strong>contact@stockpredi.fr</strong>
           </p>
 
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', marginTop: '32px', marginBottom: '16px' }}>
             8. Modifications
           </h2>
           <p>
             Nous modifierons cette politique si la loi l'exige. Vous serez notifié par email des changements majeurs.
           </p>
 
-          <p style={{ marginTop: '48px', fontSize: '14px', color: '#333333' }}>
+          <p style={{ marginTop: '48px', fontSize: '14px', color: '#555555' }}>
             Dernière mise à jour : juin 2026
           </p>
 
           <div style={{ borderTop: '1px solid #000000', marginTop: '48px', paddingTop: '24px' }}>
-            <p style={{ fontSize: '14px', color: '#333333', marginBottom: '8px' }}>Pages légales</p>
+            <p style={{ fontSize: '14px', color: '#555555', marginBottom: '8px' }}>Pages légales</p>
             <p style={{ fontSize: '14px' }}>
               <Link to="/" style={{ textDecoration: 'underline', color: '#000000' }}>← Accueil</Link>
               {' · '}
