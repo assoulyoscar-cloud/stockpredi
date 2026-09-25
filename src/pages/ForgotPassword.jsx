@@ -1,7 +1,18 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-const API_URL = process.env.REACT_APP_API_URL || "https://stockpredi-backend.onrender.com";
+const API_URL = process.env.REACT_APP_BACKEND_URL || "https://stockpredi-backend.onrender.com";
+const DEFAULT_ERR = "Impossible d'envoyer le lien. Vérifiez l'adresse email.";
+
+// Erreur backend/Supabase -> texte lisible (jamais "{}" ni "[object Object]")
+function errorText(err, fallback = DEFAULT_ERR) {
+  if (!err) return fallback;
+  if (typeof err === "string") return err.trim() || fallback;
+  const msg = err.message || err.error_description || err.msg || err.error;
+  if (typeof msg === "string" && msg.trim()) return msg;
+  if (msg && typeof msg === "object") return errorText(msg, fallback);
+  return fallback;
+}
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -38,16 +49,18 @@ export default function ForgotPassword() {
         body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
 
-      const data = await response.json();
+      // Une page d'erreur HTML (Render en veille, 502) ne doit pas faire planter le parse
+      const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        setErr(data.error || "Impossible d'envoyer le lien. Vérifiez l'adresse email.");
+      if (response.status === 429) {
+        setErr("Trop de demandes. Patientez 15 minutes avant de réessayer.");
+      } else if (!response.ok) {
+        setErr(errorText(data));
       } else {
         setSent(true);
       }
     } catch (e) {
-      const msg = typeof e === "string" ? e : (e?.message || "");
-      setErr(msg || "Impossible d'envoyer le lien. Vérifiez votre connexion internet.");
+      setErr("Serveur injoignable. Vérifiez votre connexion internet puis réessayez dans 1 minute.");
     } finally {
       setLoading(false);
     }

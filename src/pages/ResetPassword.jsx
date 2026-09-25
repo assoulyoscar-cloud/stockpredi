@@ -61,6 +61,18 @@ export default function ResetPassword() {
       }
     });
 
+    // Page chargee en lazy : supabase-js a pu traiter le #access_token (et emettre
+    // PASSWORD_RECOVERY) avant que ce listener existe. La session suffit alors.
+    if (hash.includes("type=recovery")) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session && !resolved) {
+          resolved = true;
+          setTokenValid(true);
+          setCheckingToken(false);
+        }
+      });
+    }
+
     const timeout = setTimeout(() => {
       if (!resolved) {
         setCheckingToken(false);
