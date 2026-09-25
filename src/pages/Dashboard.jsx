@@ -653,7 +653,7 @@ export default function Dashboard() {
     <div style={STYLE.page}>
       {/* NAV */}
       <nav style={STYLE.nav}>
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+        <Link to="/dashboard" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
           <img src="/logoSTOCKPREDI.png" alt="StockPredi" style={{ height: "32px" }} />
           <span style={{ fontSize: "18px", fontWeight: "700", color: "#000" }}>STOCKPREDI</span>
         </Link>
