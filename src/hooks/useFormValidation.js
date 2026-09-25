@@ -41,7 +41,14 @@ export function useFormValidation(initialValues, onSubmit, validate) {
     }
   };
 
+  const reset = () => {
+    setValues(initialValues);
+    setErrors({});
+    setTouched({});
+  };
+
   return {
+    reset,
     values,
     errors,
     touched,

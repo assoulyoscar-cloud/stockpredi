@@ -21,17 +21,12 @@ export default function Contact() {
           message: values.message.trim(),
         });
         if (dbErr) throw dbErr;
+        // Succes uniquement si l'insert a reussi
         setSubmitted(true);
-        setTimeout(() => {
-          setSubmitted(false);
-          form.values.name = '';
-          form.values.email = '';
-          form.values.subject = '';
-          form.values.message = '';
-        }, 4000);
+        form.reset();
       } catch (err) {
-        setSubmitError('Erreur lors de l\'envoi. Contactez directement contact@stockpredi.fr');
-        console.error('Contact form error:', err);
+        setSubmitted(false);
+        setSubmitError('Votre message n\'a pas pu être envoyé. Réessayez ou écrivez directement à contact@stockpredi.fr');
         // Anti-spam: cooldown
         setSubmitCooldown(true);
         setTimeout(() => setSubmitCooldown(false), 2000);
