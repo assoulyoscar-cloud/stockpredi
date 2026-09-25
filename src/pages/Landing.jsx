@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../api/supabaseClient';
 
 export default function Landing() {
+  // Connecte (logo cliqué depuis une page légale...) : ne pas afficher "Connexion"
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setLoggedIn(!!session));
+  }, []);
+
   return (
     <div style={{ fontFamily: 'Courier New, monospace', color: '#000000', backgroundColor: '#FFFFFF' }}>
 
@@ -19,6 +26,18 @@ export default function Landing() {
             <img src="/logoSTOCKPREDI.png" alt="StockPredi" style={{ height: '32px', width: 'auto' }} />
             <span style={{ fontSize: '18px', fontWeight: '700', color: '#000000' }}>STOCKPREDI</span>
           </Link>
+          {loggedIn ? (
+            <Link to="/dashboard" style={{
+              background: '#000000',
+              color: '#FFFFFF',
+              padding: '8px 16px',
+              textDecoration: 'none',
+              fontSize: '14px',
+              fontWeight: '700'
+            }}>
+              Mon dashboard
+            </Link>
+          ) : (
           <div style={{ display: 'flex', gap: '16px' }}>
             <Link to="/login" style={{ textDecoration: 'none', color: '#000000', fontSize: '14px', fontWeight: '700' }}>
               Connexion
@@ -34,6 +53,7 @@ export default function Landing() {
               Créer un compte
             </Link>
           </div>
+          )}
         </div>
       </nav>
 

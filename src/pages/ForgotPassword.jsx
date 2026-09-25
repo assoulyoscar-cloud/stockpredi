@@ -63,7 +63,10 @@ export default function ForgotPassword() {
   return (
     <div style={STYLE.page}>
       <nav style={STYLE.nav}>
-        <span style={{ fontWeight: "700", fontSize: "16px" }}>STOCKPREDI</span>
+        <Link to="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+          <img src="/logoSTOCKPREDI.png" alt="StockPredi" style={{ height: "32px" }} />
+          <span style={{ fontSize: "18px", fontWeight: "700", color: "#000" }}>STOCKPREDI</span>
+        </Link>
         <Link to="/login" style={{ ...STYLE.link, marginTop: 0 }}>Retour à la connexion</Link>
       </nav>
       <div style={STYLE.main}>
