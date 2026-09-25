@@ -98,6 +98,5 @@ export default function CookieConsent() {
 
 function loadAnalytics() {
   // Placeholder for Google Analytics or other tracking
-  // Call your analytics initialization here
-  console.log('[Analytics] User accepted cookies - loading analytics');
+  // Call your analytics initialization here (aucun outil de mesure installe pour l'instant)
 }
