@@ -6,6 +6,7 @@ export default function Landing() {
   // Connecte (logo cliqué depuis une page légale...) : ne pas afficher "Connexion"
   const [loggedIn, setLoggedIn] = useState(false);
   useEffect(() => {
+    if (!supabase) return;
     supabase.auth.getSession().then(({ data: { session } }) => setLoggedIn(!!session));
   }, []);
 
