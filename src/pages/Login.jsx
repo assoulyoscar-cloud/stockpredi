@@ -3,13 +3,17 @@ import { Link } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
 import { useFormValidation } from "../hooks/useFormValidation";
 import { validateLoginForm } from "../utils/validators";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { backendClient } from "../api/backendClient";
 
 export default function Login() {
   const navigate = useNavigate();
   const [error] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitCooldown, setSubmitCooldown] = useState(false);
+
+  // Render dort : le reveiller pendant la saisie des identifiants
+  useEffect(() => { backendClient.wake(); }, []);
 
   const form = useFormValidation(
     { email: "", password: "" },

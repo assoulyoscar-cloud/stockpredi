@@ -476,7 +476,7 @@ export default function Dashboard() {
     setLoading(true);
     setShowAllPredictions(false);
     const coldStartTimer = setTimeout(() => {
-      setError("\u23F3 Première connexion au serveur — patientez ~30 secondes...");
+      setError("\u23F3 Démarrage du serveur — patientez jusqu'à 1 minute...");
     }, 5000);
     try {
       const payload = data || SAMPLE_DATA;
@@ -519,18 +519,7 @@ export default function Dashboard() {
     setRgpdError("");
     setRgpdSuccess("");
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Non authentifié");
-      const BACKEND = process.env.REACT_APP_BACKEND_URL || "https://stockpredi-backend.onrender.com";
-      const res = await fetch(`${BACKEND}/api/rgpd/export`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${session.access_token}`, "Content-Type": "application/json" },
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `Erreur serveur (${res.status})`);
-      }
-      const blob = await res.blob();
+      const blob = await backendClient.rgpdExport();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -552,17 +541,7 @@ export default function Dashboard() {
     setAdminExportLoading(true);
     setAdminExportError("");
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Non authentifié");
-      const BACKEND = process.env.REACT_APP_BACKEND_URL || "https://stockpredi-backend.onrender.com";
-      const res = await fetch(`${BACKEND}/api/admin/export-clients`, {
-        headers: { "Authorization": `Bearer ${session.access_token}` },
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `Erreur serveur (${res.status})`);
-      }
-      const blob = await res.blob();
+      const blob = await backendClient.adminExportClients();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

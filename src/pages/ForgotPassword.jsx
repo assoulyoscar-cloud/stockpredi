@@ -1,24 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { BACKEND_URL, backendClient } from "../api/backendClient";
+import { errorText } from "../utils/errorText";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || "https://stockpredi-backend.onrender.com";
 const DEFAULT_ERR = "Impossible d'envoyer le lien. Vérifiez l'adresse email.";
-
-// Erreur backend/Supabase -> texte lisible (jamais "{}" ni "[object Object]")
-function errorText(err, fallback = DEFAULT_ERR) {
-  if (!err) return fallback;
-  if (typeof err === "string") return err.trim() || fallback;
-  const msg = err.message || err.error_description || err.msg || err.error;
-  if (typeof msg === "string" && msg.trim()) return msg;
-  if (msg && typeof msg === "object") return errorText(msg, fallback);
-  return fallback;
-}
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Render dort : le reveiller pendant la saisie de l'email
+  useEffect(() => { backendClient.wake(); }, []);
 
   const STYLE = {
     page: { fontFamily: "Courier New, monospace", minHeight: "100vh", background: "#fff", color: "#000", display: "flex", flexDirection: "column" },
@@ -43,7 +37,7 @@ export default function ForgotPassword() {
     setErr("");
     
     try {
-      const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim().toLowerCase() }),
@@ -55,7 +49,7 @@ export default function ForgotPassword() {
       if (response.status === 429) {
         setErr("Trop de demandes. Patientez 15 minutes avant de réessayer.");
       } else if (!response.ok) {
-        setErr(errorText(data));
+        setErr(errorText(data, DEFAULT_ERR));
       } else {
         setSent(true);
       }
