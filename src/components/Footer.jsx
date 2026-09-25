@@ -74,7 +74,7 @@ export default function Footer() {
             Marque déposée — Tous droits réservés.
           </p>
           <p style={STYLE.text}>
-            SIRET : en cours d'enregistrement<br />
+            SIRET : en cours d'immatriculation<br />
             APE : 6201Z — Édition de logiciels<br />
             TVA : franchise art. 293 B CGI
           </p>

@@ -473,7 +473,7 @@ export default function Dashboard() {
         <div>
           <div style="font-weight:700;font-size:11px;letter-spacing:1px">STOCKPREDI®</div>
           <div>Marque déposée — Tous droits réservés © ${new Date().getFullYear()}</div>
-          <div>SIRET : En cours d'enregistrement — APE 6201Z — APE 6201Z</div>
+          <div>SIRET : En cours d'immatriculation — APE 6201Z</div>
           <div>stockpredi.fr — support@stockpredi.fr</div>
           <div style="margin-top:4px;font-style:italic;color:#555">Document généré automatiquement par StockPredi. Toute reproduction ou diffusion interdite sans autorisation écrite.</div>
           <div style="margin-top:2px;color:#888">Hébergement UE — Données protégées RGPD — Paiements sécurisés Stripe (PCI DSS)</div>
