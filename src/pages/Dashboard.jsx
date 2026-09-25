@@ -73,6 +73,8 @@ export default function Dashboard() {
   const [csvError, setCsvError] = useState("");
   const [subStatus, setSubStatus] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
+  const [subCheckFailed, setSubCheckFailed] = useState(false);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [history, setHistory] = useState(null); // null = pas encore charge
   const [historyLoading, setHistoryLoading] = useState(false);
   const [importedFiles, setImportedFiles] = useState([]); // liste des fichiers importés
@@ -92,7 +94,7 @@ export default function Dashboard() {
     });
     backendClient.subscriptionStatus()
       .then(setSubStatus)
-      .catch(() => setSubStatus({ plan: "trial" })) // statut inconnu -> trial (jamais "active" par défaut)
+      .catch(() => { setSubStatus({ plan: "trial" }); setSubCheckFailed(true); }) // statut inconnu -> trial (jamais "active" par défaut)
       .finally(() => setSubLoading(false));
   }, [navigate]);
 
@@ -521,15 +523,15 @@ export default function Dashboard() {
   }
 
   async function handleSubscribe() {
-    setLoading(true);
+    setSubscribeLoading(true);
     setError("");
     try {
       const res = await backendClient.createSubscription();
-      if (res.checkout_url) window.location.href = res.checkout_url;
+      if (!res.checkout_url) throw new Error("Lien de paiement Stripe manquant");
+      window.location.href = res.checkout_url; // le bouton reste désactivé jusqu'à la redirection
     } catch (err) {
       setError(`❌ Abonnement impossible — ${err.message || "Contactez support@stockpredi.fr"}`);
-    } finally {
-      setLoading(false);
+      setSubscribeLoading(false);
     }
   }
 
@@ -1017,6 +1019,11 @@ export default function Dashboard() {
                   <p style={{ fontSize: "14px", marginBottom: "8px" }}>
                     Plan actuel : <strong style={{ color: planColor }}>{planLabel.toUpperCase()}</strong>
                   </p>
+                  {subCheckFailed && (
+                    <p style={{ fontSize: "13px", color: "#cc6600", marginBottom: "8px" }}>
+                      Impossible de vérifier votre abonnement pour le moment — rechargez la page dans une minute.
+                    </p>
+                  )}
                   {planLabel === "active" ? (
                     <p style={{ fontSize: "14px", color: "#006600", marginTop: "8px" }}>
                       ✓ Abonnement actif — accès illimité à toutes les prévisions.
@@ -1026,8 +1033,8 @@ export default function Dashboard() {
                       <p style={{ fontSize: "14px", marginBottom: "16px", color: "#555" }}>
                         Passez à l'abonnement payant pour un accès illimité — 35 €/mois, annulation à tout moment.
                       </p>
-                      <button onClick={handleSubscribe} disabled={loading} style={{ ...STYLE.btn("primary"), opacity: loading ? 0.6 : 1 }}>
-                        {loading ? "Redirection..." : "S'abonner — 35 €/mois"}
+                      <button onClick={handleSubscribe} disabled={subscribeLoading} style={{ ...STYLE.btn("primary"), opacity: subscribeLoading ? 0.6 : 1 }}>
+                        {subscribeLoading ? "Redirection vers Stripe..." : "S'abonner — 35 €/mois"}
                       </button>
                     </div>
                   )}
