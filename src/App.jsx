@@ -1,24 +1,32 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
-import MentionsLegales from './pages/MentionsLegales';
-import PolitiqueConfidentialite from './pages/PolitiqueConfidentialite';
-import ConditionsUtilisation from './pages/ConditionsUtilisation';
-import Contact from './pages/Contact';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import Dashboard from './pages/Dashboard';
-import FoodBeverageLanding from './pages/FoodBeverageLanding';
-import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
-
 import CookieConsent from './components/CookieConsent';
+
+// Pages chargees a la demande : le Dashboard (et xlsx) ne pese plus sur la landing
+const MentionsLegales = lazy(() => import('./pages/MentionsLegales'));
+const PolitiqueConfidentialite = lazy(() => import('./pages/PolitiqueConfidentialite'));
+const ConditionsUtilisation = lazy(() => import('./pages/ConditionsUtilisation'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const FoodBeverageLanding = lazy(() => import('./pages/FoodBeverageLanding'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+const FALLBACK = (
+  <div style={{ fontFamily: '"Courier New", monospace', fontSize: '13px', color: '#888', padding: '32px', textAlign: 'center' }}>
+    Chargement...
+  </div>
+);
 
 export default function App() {
   return (
     <Router>
+      <Suspense fallback={FALLBACK}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
@@ -31,9 +39,10 @@ export default function App() {
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
         <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
-                <Route path="/contact" element={<Contact />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
       <CookieConsent />
     </Router>
   );
