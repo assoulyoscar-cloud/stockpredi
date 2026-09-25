@@ -13,6 +13,26 @@ const SECTOR_METRICS_KEY = { bureau_etude: "bureau_etudes" };
 
 const ADMIN_EMAIL = "assouly.oscar@gmail.com"; // affichage seulement : le backend refuse tout autre compte (403)
 
+// Valeur affichee telle quelle dans le JSX : un objet (ancienne sauvegarde, reponse
+// IA mal formee) ferait planter tout le rendu -> page blanche.
+const txt = (v) => (v == null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v));
+const arr = (v) => (Array.isArray(v) ? v : []);
+
+// predictions.forecast_data (jsonb ou chaine, anciens formats) -> forme de la reponse /recommendations
+function normalizeSaved(fd) {
+  if (typeof fd === "string") {
+    try { fd = JSON.parse(fd); } catch { fd = {}; }
+  }
+  if (!fd || typeof fd !== "object") fd = {};
+  const forecast = fd.forecast && typeof fd.forecast === "object" ? fd.forecast : {};
+  return {
+    ...fd,
+    forecast: { ...forecast, predictions: arr(forecast.predictions).length ? arr(forecast.predictions) : arr(fd.predictions) },
+    recommendations: arr(fd.recommendations),
+    alerts: arr(fd.alerts),
+  };
+}
+
 const SAMPLE_DATA = [
   {ds:"2024-01-01",y:120},{ds:"2024-01-08",y:134},{ds:"2024-01-15",y:118},
   {ds:"2024-01-22",y:142},{ds:"2024-02-01",y:155},{ds:"2024-02-08",y:148},
@@ -100,20 +120,20 @@ export default function Dashboard() {
   }
 
   function viewPrediction(row) {
-    let fd = row.forecast_data || {};
-    if (typeof fd === "string") {
-      try { fd = JSON.parse(fd); } catch { fd = {}; }
-    }
-    setResult({ ...fd, forecast: fd.forecast || {} });
+    const fd = normalizeSaved(row.forecast_data);
+    setResult(fd);
     setData(null);
     setCsvError("");
     setError("");
     setShowAllPredictions(false);
-    setProductName(fd.product_name || row.filename || "Mon produit");
-    if (fd.periods) setPeriods(fd.periods);
-    if (fd.sector) setSector(fd.sector);
-    if (fd.sector_params) setSectorParams(fd.sector_params);
+    setProductName(txt(fd.product_name || row.filename) || "Mon produit");
+    if (Number(fd.periods)) setPeriods(Number(fd.periods));
+    // Ancien secteur inconnu du dropdown -> Général ; curseurs manquants -> preset
+    const sec = SECTOR_PRESETS[fd.sector] ? fd.sector : "general";
+    setSector(sec);
+    setSectorParams({ ...SECTOR_PRESETS[sec], ...(fd.sector_params && typeof fd.sector_params === "object" ? fd.sector_params : {}) });
     setTab("forecast");
+    window.scrollTo(0, 0);
   }
 
   async function handleLogout() {
@@ -824,21 +844,21 @@ export default function Dashboard() {
                       via {result.ai_source === "ollama" ? "Llama3.1" : "moteur StockPredi"}
                     </span>
                   </h2>
-                  <p style={{ fontSize: "13px", color: "#555", marginBottom: "8px" }}>{result.summary}</p>
+                  <p style={{ fontSize: "13px", color: "#555", marginBottom: "8px" }}>{txt(result.summary)}</p>
                   {result.forecast?.seasonality_context && (
                     <p style={{ fontSize: "11px", color: "#006600", marginBottom: "8px", borderLeft: "3px solid #006600", paddingLeft: "8px" }}>
-                      {result.forecast.seasonality_context}
+                      {txt(result.forecast.seasonality_context)}
                     </p>
                   )}
-                  {(result.forecast?.anomalies || []).map((a, i) => (
+                  {arr(result.forecast?.anomalies).map((a, i) => (
                     <p key={i} style={{ fontSize: "11px", color: "#cc6600", marginBottom: "4px", borderLeft: "3px solid #cc6600", paddingLeft: "8px" }}>
-                      {a}
+                      {txt(a)}
                     </p>
                   ))}
-                  {(result.recommendations || []).map((r, i) => (
-                    <div key={i} style={STYLE.alert(r.priority)}>
-                      <strong>[{r.priority}]</strong> {r.action}
-                      {r.detail && <span style={{ color: "#555" }}> — {r.detail}</span>}
+                  {arr(result.recommendations).map((r, i) => (
+                    <div key={i} style={STYLE.alert(r?.priority)}>
+                      <strong>[{txt(r?.priority)}]</strong> {txt(r?.action)}
+                      {r?.detail && <span style={{ color: "#555" }}> — {txt(r.detail)}</span>}
                     </div>
                   ))}
                   {result.ai_source !== "ollama" && (
@@ -849,12 +869,12 @@ export default function Dashboard() {
                 </div>
 
                 {/* ALERTES */}
-                {result.alerts && result.alerts.length > 0 && (
+                {arr(result.alerts).length > 0 && (
                   <div style={STYLE.card}>
                     <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>Alertes détectées</h2>
-                    {result.alerts.map((a, i) => (
-                      <div key={i} style={STYLE.alert(a.type === "stockout" ? "CRITIQUE" : "ATTENTION")}>
-                        <strong>{a.type === "stockout" ? "RUPTURE" : "SURPLUS"}</strong> le {a.date} — {a.action}
+                    {arr(result.alerts).map((a, i) => (
+                      <div key={i} style={STYLE.alert(a?.type === "stockout" ? "CRITIQUE" : "ATTENTION")}>
+                        <strong>{a?.type === "stockout" ? "RUPTURE" : "SURPLUS"}</strong> le {txt(a?.date)} — {txt(a?.action)}
                       </div>
                     ))}
                   </div>
@@ -865,11 +885,11 @@ export default function Dashboard() {
                   <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "4px" }}>
                     Prévisions {periods} jours
                     <span style={{ fontSize: "11px", fontWeight: "400", color: "#888", marginLeft: "8px" }}>
-                      modèle {result.forecast?.model} · précision {((result.forecast?.accuracy_score || 0)*100).toFixed(0)}%
+                      modèle {txt(result.forecast?.model)} · précision {((Number(result.forecast?.accuracy_score) || 0)*100).toFixed(0)}%
                     </span>
                   </h2>
                   <p style={{ fontSize: "12px", color: "#555", marginBottom: "16px" }}>
-                    Tendance : <strong>{result.trend}</strong> · {result.forecast?.data_points ?? (data ? data.length : "\u2014")} points d'historique
+                    Tendance : <strong>{txt(result.trend) || "—"}</strong> · {txt(result.forecast?.data_points ?? result.data_points ?? (data ? data.length : "—"))} points d'historique
                   </p>
                   <div style={{ overflowX: "auto" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
@@ -882,17 +902,20 @@ export default function Dashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {(result.forecast?.predictions || []).slice(0, showAllPredictions ? undefined : 10).map((p, i) => (
+                        {arr(result.forecast?.predictions).slice(0, showAllPredictions ? undefined : 10).map((p, i) => (
                           <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
-                            <td style={{ padding: "8px" }}>{p.date}</td>
-                            <td style={{ padding: "8px", textAlign: "right", fontWeight: "700" }}>{p.forecast}</td>
-                            <td style={{ padding: "8px", textAlign: "right", color: "#888" }}>{p.confidence_lower}</td>
-                            <td style={{ padding: "8px", textAlign: "right", color: "#888" }}>{p.confidence_upper}</td>
+                            <td style={{ padding: "8px" }}>{txt(p?.date)}</td>
+                            <td style={{ padding: "8px", textAlign: "right", fontWeight: "700" }}>{txt(p?.forecast)}</td>
+                            <td style={{ padding: "8px", textAlign: "right", color: "#888" }}>{txt(p?.confidence_lower)}</td>
+                            <td style={{ padding: "8px", textAlign: "right", color: "#888" }}>{txt(p?.confidence_upper)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    {(result.forecast?.predictions || []).length > 10 && !showAllPredictions && (
+                    {arr(result.forecast?.predictions).length === 0 && (
+                      <p style={{ fontSize: "13px", color: "#888", padding: "8px" }}>Aucune valeur de prévision dans cette sauvegarde.</p>
+                    )}
+                    {arr(result.forecast?.predictions).length > 10 && !showAllPredictions && (
                       <button
                         onClick={() => setShowAllPredictions(true)}
                         style={{ ...STYLE.btn("secondary"), marginTop: "8px", fontSize: "12px", padding: "6px 14px" }}
@@ -952,15 +975,16 @@ export default function Dashboard() {
                     </thead>
                     <tbody>
                       {history.map((row) => {
-                        const fd = row.forecast_data || {};
+                        const fd = normalizeSaved(row.forecast_data);
+                        const acc = Number(fd.forecast.accuracy_score);
                         return (
                           <tr key={row.id} style={{ borderBottom: "1px solid #eee" }}>
                             <td style={{ padding: "8px" }}>{new Date(row.created_at).toLocaleDateString("fr-FR")}</td>
-                            <td style={{ padding: "8px", fontWeight: "700" }}>{fd.product_name || row.filename}</td>
-                            <td style={{ padding: "8px", textAlign: "right" }}>{fd.periods ? `${fd.periods} j` : "—"}</td>
-                            <td style={{ padding: "8px" }}>{fd.trend || "—"}</td>
+                            <td style={{ padding: "8px", fontWeight: "700" }}>{txt(fd.product_name || row.filename)}</td>
+                            <td style={{ padding: "8px", textAlign: "right" }}>{fd.periods ? `${txt(fd.periods)} j` : "—"}</td>
+                            <td style={{ padding: "8px" }}>{txt(fd.trend) || "—"}</td>
                             <td style={{ padding: "8px", textAlign: "right" }}>
-                              {fd.forecast?.accuracy_score != null ? `${(fd.forecast.accuracy_score * 100).toFixed(0)}%` : "—"}
+                              {fd.forecast.accuracy_score != null && !isNaN(acc) ? `${(acc * 100).toFixed(0)}%` : "—"}
                             </td>
                             <td style={{ padding: "8px", textAlign: "right", whiteSpace: "nowrap" }}>
                               <button onClick={() => viewPrediction(row)} style={{ ...STYLE.btn("secondary"), padding: "4px 10px", fontSize: "12px", marginRight: "8px" }}>
