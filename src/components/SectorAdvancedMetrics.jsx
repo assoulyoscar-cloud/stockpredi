@@ -9,31 +9,33 @@ export function SectorAdvancedMetrics({ sector }) {
     <div className="advanced-metrics">
       <style>{`
         .advanced-metrics {
-          background: white;
-          border-radius: 12px;
+          background: #fff;
           padding: 16px;
           margin-top: 12px;
-          border: 1px solid #e0e0e0;
+          border: 1px solid #eee;
+          font-family: "Courier New", monospace;
+          font-weight: 400;
+          color: #000;
         }
-        .metric-grid {
+        .advanced-metrics .metric-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
           gap: 12px;
           margin-bottom: 16px;
         }
-        .metric-card {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .advanced-metrics .metric-card {
+          background: #fff;
           padding: 12px;
-          border-radius: 8px;
-          color: white;
+          border: 1px solid #000;
+          color: #000;
           text-align: center;
         }
-        .metric-label { font-size: 11px; opacity: 0.9; margin-bottom: 4px; text-transform: uppercase; }
-        .metric-value { font-size: 22px; font-weight: 700; }
-        .section { margin-top: 12px; border-top: 1px solid #e0e0e0; padding-top: 12px; }
-        .section-title { font-size: 14px; font-weight: 600; color: #333; cursor: pointer; display: flex; justify-content: space-between; padding: 8px 0; }
-        .section-content { margin-top: 8px; font-size: 13px; color: #666; line-height: 1.6; }
-        .alert { background: #f0f0ff; border-left: 3px solid #667eea; padding: 10px; border-radius: 4px; margin: 6px 0; font-size: 12px; }
+        .advanced-metrics .metric-label { font-size: 11px; color: #888; margin-bottom: 4px; text-transform: uppercase; }
+        .advanced-metrics .metric-value { font-size: 16px; font-weight: 700; }
+        .advanced-metrics .section { margin-top: 12px; border-top: 1px solid #eee; padding-top: 12px; }
+        .advanced-metrics .section-title { font-size: 13px; font-weight: 700; color: #000; cursor: pointer; display: flex; justify-content: space-between; padding: 8px 0; }
+        .advanced-metrics .section-content { margin-top: 8px; font-size: 13px; color: #555; line-height: 1.6; }
+        .advanced-metrics .alert { background: #f5f5f5; border-left: 3px solid #000; padding: 10px; margin: 6px 0; font-size: 12px; }
       `}</style>
 
       <div className="metric-grid">

@@ -123,7 +123,7 @@ export default function FoodBeverageLanding() {
           </div>
           <div style={styles.resultBox}>
             <p style={styles.resultLabel}>ROI Année 1 (après €{roi.costPerYear.toFixed(0)} abonnement)</p>
-            <p style={{ ...styles.resultValue, color: '#e74c3c', fontSize: '1.8em' }}>€{roi.netROI.toFixed(0)}</p>
+            <p style={{ ...styles.resultValue, color: '#e74c3c' }}>€{roi.netROI.toFixed(0)}</p>
           </div>
           <div style={styles.resultBox}>
             <p style={styles.resultLabel}>Retour sur investissement</p>
@@ -191,12 +191,13 @@ const styles = {
     alignItems: 'center'
   },
   heroTitle: {
-    fontSize: '2.5em',
+    fontSize: '24px',
+    fontWeight: '700',
     marginBottom: '20px',
     lineHeight: '1.2'
   },
   heroSubtitle: {
-    fontSize: '1.2em',
+    fontSize: '14px',
     marginBottom: '40px',
     opacity: 0.9
   },
@@ -205,9 +206,9 @@ const styles = {
     color: '#000',
     border: 'none',
     padding: '15px 40px',
-    fontSize: '1em',
+    fontSize: '14px',
     fontFamily: 'Courier New, monospace',
-    fontWeight: 'bold',
+    fontWeight: '700',
     cursor: 'pointer',
     transition: 'opacity 0.3s'
   },
@@ -222,11 +223,11 @@ const styles = {
     marginTop: '20px'
   },
   problemText: {
-    fontSize: '1.5em',
+    fontSize: '16px',
     margin: '0 0 10px 0'
   },
   problemDetail: {
-    fontSize: '1em',
+    fontSize: '14px',
     opacity: 0.8
   },
   calculator: {
@@ -244,15 +245,15 @@ const styles = {
     flexDirection: 'column'
   },
   label: {
-    fontSize: '0.9em',
+    fontSize: '13px',
     marginBottom: '5px',
-    fontWeight: 'bold'
+    fontWeight: '700'
   },
   input: {
     padding: '10px',
     border: '1px solid #000',
     fontFamily: 'Courier New, monospace',
-    fontSize: '1em'
+    fontSize: '14px'
   },
   results: {
     display: 'grid',
@@ -267,17 +268,18 @@ const styles = {
     textAlign: 'center'
   },
   resultLabel: {
-    fontSize: '0.9em',
-    fontWeight: 'bold',
+    fontSize: '13px',
+    fontWeight: '700',
     marginBottom: '10px'
   },
   resultValue: {
-    fontSize: '1.8em',
-    fontWeight: 'bold',
+    fontSize: '24px',
+    fontWeight: '700',
     margin: 0
   },
   sectionTitle: {
-    fontSize: '2em',
+    fontSize: '16px',
+    fontWeight: '700',
     borderBottom: '2px solid #000',
     paddingBottom: '10px',
     marginBottom: '30px'
@@ -296,20 +298,20 @@ const styles = {
     marginTop: '30px'
   },
   priceName: {
-    fontSize: '1.5em',
+    fontSize: '16px',
     marginBottom: '15px'
   },
   priceAmount: {
-    fontSize: '2.5em',
-    fontWeight: 'bold',
+    fontSize: '24px',
+    fontWeight: '700',
     margin: '10px 0'
   },
   priceFreq: {
-    fontSize: '0.6em',
-    fontWeight: 'normal'
+    fontSize: '13px',
+    fontWeight: '400'
   },
   priceDesc: {
-    fontSize: '0.95em',
+    fontSize: '14px',
     marginBottom: '20px',
     lineHeight: '1.6'
   },
@@ -320,8 +322,8 @@ const styles = {
     color: '#fff',
     border: 'none',
     fontFamily: 'Courier New, monospace',
-    fontSize: '1em',
-    fontWeight: 'bold',
+    fontSize: '14px',
+    fontWeight: '700',
     cursor: 'pointer',
     transition: 'opacity 0.3s'
   },
@@ -336,11 +338,11 @@ const styles = {
     marginTop: '20px'
   },
   caseName: {
-    fontSize: '1.3em',
+    fontSize: '16px',
     marginBottom: '15px'
   },
   caseDetail: {
-    fontSize: '0.95em',
+    fontSize: '14px',
     marginBottom: '10px'
   },
   footerCTA: {
@@ -350,7 +352,7 @@ const styles = {
     textAlign: 'center'
   },
   footerTitle: {
-    fontSize: '2em',
+    fontSize: '16px',
     marginBottom: '30px'
   },
   finalCTA: {
@@ -358,9 +360,9 @@ const styles = {
     color: '#000',
     border: 'none',
     padding: '15px 40px',
-    fontSize: '1em',
+    fontSize: '14px',
     fontFamily: 'Courier New, monospace',
-    fontWeight: 'bold',
+    fontWeight: '700',
     cursor: 'pointer',
     transition: 'opacity 0.3s'
   }
