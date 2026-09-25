@@ -11,6 +11,8 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB par fichier
 // Clés du dropdown (= clés backend) -> clés de SECTOR_CONFIGS quand elles diffèrent
 const SECTOR_METRICS_KEY = { bureau_etude: "bureau_etudes" };
 
+const ADMIN_EMAIL = "assouly.oscar@gmail.com"; // affichage seulement : le backend refuse tout autre compte (403)
+
 const SAMPLE_DATA = [
   {ds:"2024-01-01",y:120},{ds:"2024-01-08",y:134},{ds:"2024-01-15",y:118},
   {ds:"2024-01-22",y:142},{ds:"2024-02-01",y:155},{ds:"2024-02-08",y:148},
@@ -60,6 +62,8 @@ export default function Dashboard() {
   const [rgpdError, setRgpdError] = useState("");
   const [rgpdSuccess, setRgpdSuccess] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [adminExportLoading, setAdminExportLoading] = useState(false);
+  const [adminExportError, setAdminExportError] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -543,6 +547,37 @@ export default function Dashboard() {
     }
   }
 
+  // ADMIN: export CSV des clients payants (URSSAF / impôts) — le backend vérifie aussi l'email
+  async function handleAdminExportClients() {
+    setAdminExportLoading(true);
+    setAdminExportError("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Non authentifié");
+      const BACKEND = process.env.REACT_APP_BACKEND_URL || "https://stockpredi-backend.onrender.com";
+      const res = await fetch(`${BACKEND}/api/admin/export-clients`, {
+        headers: { "Authorization": `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Erreur serveur (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `StockPredi_clients_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setAdminExportError(`❌ Export clients impossible — ${err.message || "Réessayez."}`);
+    } finally {
+      setAdminExportLoading(false);
+    }
+  }
+
   // RGPD: Load export history
   async function loadRgpdStatus() {
     setRgpdLoading(true);
@@ -1007,7 +1042,23 @@ export default function Dashboard() {
                 Se déconnecter
               </button>
             </div>
-            
+
+            {user?.email?.toLowerCase() === ADMIN_EMAIL && (
+              <div style={STYLE.card}>
+                <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "8px" }}>Administration</h2>
+                <p style={{ fontSize: "13px", color: "#555", marginBottom: "16px" }}>
+                  Paiements clients (date, email, HT/TTC, n° facture, statut) pour la déclaration URSSAF et les impôts.
+                </p>
+                <button
+                  onClick={handleAdminExportClients}
+                  disabled={adminExportLoading}
+                  style={{ ...STYLE.btn("primary"), opacity: adminExportLoading ? 0.6 : 1 }}
+                >
+                  {adminExportLoading ? "Préparation..." : "📊 Export clients (CSV)"}
+                </button>
+                {adminExportError && <p style={{ color: "#cc0000", fontSize: "13px", marginTop: "8px" }}>{adminExportError}</p>}
+              </div>
+            )}
           </div>
         )}
 
