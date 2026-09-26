@@ -2,14 +2,31 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../api/supabaseClient";
 import { backendClient } from "../api/backendClient";
-import { SECTOR_CONFIGS } from "../config/sectorConfig";
-import { SectorAdvancedMetrics } from "../components/SectorAdvancedMetrics";
 import * as XLSX from "xlsx";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB par fichier
 
-// Clés du dropdown (= clés backend) -> clés de SECTOR_CONFIGS quand elles diffèrent
-const SECTOR_METRICS_KEY = { bureau_etude: "bureau_etudes" };
+// Paramètres envoyés au backend (recommendations.py) selon le secteur choisi
+const SECTOR_PRESETS = {
+  general:       { perissable: 30, saisonnalite: 50, marge_securite: 20, tolerance_rupture: 30 },
+  restaurant:    { perissable: 95, saisonnalite: 70, marge_securite: 15, tolerance_rupture: 10 },
+  epicerie:      { perissable: 75, saisonnalite: 60, marge_securite: 20, tolerance_rupture: 15 },
+  boulangerie:   { perissable: 100, saisonnalite: 65, marge_securite: 10, tolerance_rupture: 5 },
+  pepiniere:     { perissable: 15, saisonnalite: 95, marge_securite: 30, tolerance_rupture: 40 },
+  boutique:      { perissable: 5, saisonnalite: 55, marge_securite: 25, tolerance_rupture: 25 },
+  bureau_etude:  { perissable: 0, saisonnalite: 30, marge_securite: 35, tolerance_rupture: 50 },
+};
+
+// Phrase affichée sous le dropdown : le client ne voit plus les paramètres techniques
+const SECTOR_DESCRIPTIONS = {
+  general: "",
+  restaurant: "Produits très périssables · Pics week-end et fêtes · Stock serré, zéro gaspillage",
+  epicerie: "Produits périssables · Pics avant fêtes · Surveiller les DLC",
+  boulangerie: "Production du jour · Pics dimanche · Ajuster les fournées au plus juste",
+  pepiniere: "Produits durables · Très saisonnier (mars-juin) · Commander 3 mois en avance",
+  boutique: "Stock durable · Pics soldes et Noël · Optimiser la rotation",
+  bureau_etude: "Fournitures stables · Peu saisonnier · Commande mensuelle automatique",
+};
 
 const ADMIN_EMAIL = "assouly.oscar@gmail.com"; // affichage seulement : le backend refuse tout autre compte (403)
 
@@ -54,22 +71,6 @@ export default function Dashboard() {
   const [data, setData] = useState(null); // null = no CSV loaded yet (empty state)
   const [periods, setPeriods] = useState(30);
   const [sector, setSector] = useState("general");
-  const [sectorParams, setSectorParams] = useState({ perissable: 30, saisonnalite: 50, marge_securite: 20, tolerance_rupture: 30 });
-
-  const SECTOR_PRESETS = {
-    general:       { perissable: 30, saisonnalite: 50, marge_securite: 20, tolerance_rupture: 30 },
-    restaurant:    { perissable: 95, saisonnalite: 70, marge_securite: 15, tolerance_rupture: 10 },
-    epicerie:      { perissable: 75, saisonnalite: 60, marge_securite: 20, tolerance_rupture: 15 },
-    boulangerie:   { perissable: 100, saisonnalite: 65, marge_securite: 10, tolerance_rupture: 5 },
-    pepiniere:     { perissable: 15, saisonnalite: 95, marge_securite: 30, tolerance_rupture: 40 },
-    boutique:      { perissable: 5, saisonnalite: 55, marge_securite: 25, tolerance_rupture: 25 },
-    bureau_etude:  { perissable: 0, saisonnalite: 30, marge_securite: 35, tolerance_rupture: 50 },
-  };
-
-  function handleSectorChange(val) {
-    setSector(val);
-    setSectorParams(SECTOR_PRESETS[val] || SECTOR_PRESETS.general);
-  }
   const [csvError, setCsvError] = useState("");
   const [subStatus, setSubStatus] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
@@ -133,7 +134,6 @@ export default function Dashboard() {
     // Ancien secteur inconnu du dropdown -> Général ; curseurs manquants -> preset
     const sec = SECTOR_PRESETS[fd.sector] ? fd.sector : "general";
     setSector(sec);
-    setSectorParams({ ...SECTOR_PRESETS[sec], ...(fd.sector_params && typeof fd.sector_params === "object" ? fd.sector_params : {}) });
     setTab("forecast");
     window.scrollTo(0, 0);
   }
@@ -502,6 +502,7 @@ export default function Dashboard() {
     }, 5000);
     try {
       const payload = data || SAMPLE_DATA;
+      const sectorParams = SECTOR_PRESETS[sector] || SECTOR_PRESETS.general;
       const res = await backendClient.recommendations(payload, productName, periods, sector, sectorParams);
       setResult(res);
       // Sauvegarde dans l'historique (Supabase direct — pas de dependance backend)
@@ -697,7 +698,7 @@ export default function Dashboard() {
             {/* SECTEUR — toujours visible, à choisir avant l'import */}
             <div style={STYLE.card}>
               <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>Secteur d'activité</h2>
-              <select style={STYLE.input} value={sector} onChange={e => handleSectorChange(e.target.value)}>
+              <select style={STYLE.input} value={sector} onChange={e => setSector(e.target.value)}>
                 <option value="general">Général</option>
                 <option value="restaurant">Restaurant / Traiteur</option>
                 <option value="epicerie">Épicerie / Alimentation</option>
@@ -706,42 +707,13 @@ export default function Dashboard() {
                 <option value="boutique">Boutique / Commerce de détail</option>
                 <option value="bureau_etude">Bureau d'études / Services</option>
               </select>
+              {sector !== "general" && (
+                <p style={{ fontSize: "12px", color: "#888", marginTop: "8px", fontStyle: "italic" }}>
+                  {SECTOR_DESCRIPTIONS[sector]}
+                </p>
+              )}
               <p style={{ fontSize: "12px", color: "#888", marginTop: "12px" }}>Choisissez avant d'importer</p>
 
-              {sector !== "general" && (
-                <div style={{ border: "1px solid #eee", padding: "16px", marginTop: "16px" }}>
-                  <p style={{ fontSize: "12px", fontWeight: "700", marginBottom: "12px", color: "#555" }}>
-                    Paramètres métier — ajustez selon votre activité
-                  </p>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                    {[
-                      { key: "perissable", label: "Périssabilité", low: "Durable", high: "Très périssable" },
-                      { key: "saisonnalite", label: "Saisonnalité", low: "Stable", high: "Très saisonnier" },
-                      { key: "marge_securite", label: "Marge de sécurité", low: "Juste", high: "Large" },
-                      { key: "tolerance_rupture", label: "Tolérance rupture", low: "Zéro rupture", high: "Flexible" },
-                    ].map(({ key, label, low, high }) => (
-                      <div key={key}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "4px" }}>
-                          <span style={{ fontWeight: "700" }}>{label}</span>
-                          <span style={{ color: "#888" }}>{sectorParams[key]}%</span>
-                        </div>
-                        <input
-                          type="range" min="0" max="100" value={sectorParams[key] ?? 0}
-                          onChange={e => setSectorParams(p => ({ ...p, [key]: Number(e.target.value) }))}
-                          style={{ width: "100%", accentColor: "#000" }}
-                        />
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#aaa" }}>
-                          <span>{low}</span>
-                          <span>{high}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {SECTOR_CONFIGS[SECTOR_METRICS_KEY[sector] || sector] && (
-                <SectorAdvancedMetrics sector={SECTOR_METRICS_KEY[sector] || sector} />
-              )}
             </div>
 
             {/* EMPTY STATE — no CSV loaded yet */}
