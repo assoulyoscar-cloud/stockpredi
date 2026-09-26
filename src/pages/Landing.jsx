@@ -63,7 +63,7 @@ export default function Landing() {
         <p style={{ fontSize: '12px', fontWeight: '700', letterSpacing: '2px', marginBottom: '24px' }}>
           PREVISIONS DE STOCK IA - PME FRANCAISES
         </p>
-        <h1 style={{ fontSize: '48px', fontWeight: '700', lineHeight: '1.1', marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: '700', lineHeight: '1.1', marginBottom: '24px' }}>
           Zero rupture.<br />Zero surplus.
         </h1>
         <p style={{ fontSize: '18px', lineHeight: '1.6', marginBottom: '40px', color: '#333333' }}>
@@ -101,7 +101,7 @@ export default function Landing() {
 
       {/* PROBLEME */}
       <section style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 32px' }}>
-        <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '32px' }}>Le probleme</h2>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '32px' }}>Le probleme</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {[
             ['Ruptures de stock', 'Des ventes perdues a cause d un reapprovisionnement trop tardif.'],
@@ -124,7 +124,7 @@ export default function Landing() {
 
       {/* COMMENT CA MARCHE */}
       <section style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 32px' }}>
-        <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '32px' }}>Comment ca marche</h2>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '32px' }}>Comment ca marche</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {[
             ['01', 'Importez vos donnees', 'Glissez votre fichier CSV ou Excel (historique de ventes, stocks). Aucune integration requise.'],
@@ -167,7 +167,7 @@ export default function Landing() {
 
       {/* TARIF */}
       <section style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 32px' }}>
-        <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '32px' }}>Tarif</h2>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '32px' }}>Tarif</h2>
         <div style={{ border: '2px solid #000000', padding: '32px' }}>
           <p style={{ fontSize: '48px', fontWeight: '700', margin: '0 0 4px 0' }}>
             35 EUR<span style={{ fontSize: '18px', fontWeight: '400', color: '#333333' }}>/mois</span>
@@ -209,7 +209,7 @@ export default function Landing() {
 
       {/* ENCADRE CONNEXION / COMPTE */}
       <section style={{ maxWidth: '680px', margin: '0 auto', padding: '64px 32px' }}>
-        <h2 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '16px' }}>Acces a la plateforme</h2>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '16px' }}>Acces a la plateforme</h2>
         <p style={{ fontSize: '15px', color: '#333333', marginBottom: '32px' }}>
           Deja client ou pret a demarrer ? Accedez directement a votre espace.
         </p>
